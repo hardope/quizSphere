@@ -13,9 +13,7 @@
 						urls: ['amqp://localhost:5672'],
 						queue: 'user_queue',
 					},
-				}
-			]),
-			ClientsModule.register([
+				},
 				{
 					name: 'EMAIL_SERVICE',
 					transport: Transport.RMQ,
