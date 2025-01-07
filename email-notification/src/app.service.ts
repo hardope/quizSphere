@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { UserDto } from './user.dto';
+// import { UserDto } from '../../user-service/src/user.dto';
 
 @Injectable()
 export class AppService {
-  handleCreatedUser (user: UserDto) {
-    console.log('User created:', user);
-  }
+	
+	handleCreatedUser (user: any) {
+		console.log('Sending Email:', user);
+	}
 }

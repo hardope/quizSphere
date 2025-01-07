@@ -10,11 +10,21 @@ import { UsersService } from './users/users.service';
 		UsersModule,
 		ClientsModule.register([
 			{
-				name: 'QUIZ_SERVICE',
+				name: 'USER_SERVICE',
 				transport: Transport.RMQ,
 				options: {
 					urls: ['amqp://localhost:5672'],
-					queue: 'quiz_queue',
+					queue: 'user_queue',
+				},
+			}
+		]),
+		ClientsModule.register([
+			{
+				name: 'EMAIL_SERVICE',
+				transport: Transport.RMQ,
+				options: {
+					urls: ['amqp://localhost:5672'],
+					queue: 'email_queue',
 				},
 			}
 		]),

@@ -6,15 +6,20 @@ import { ClientProxy } from '@nestjs/microservices';
 @Injectable()
 export class UsersService {
 
-	constructor (@Inject('QUIZ_SERVICE') private readonly client: ClientProxy) {}
+	constructor (
+		@Inject('USER_SERVICE') private readonly client: ClientProxy,
+		@Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy
+	) {}
+	
 
 	create(createUserDto: CreateUserDto) {
 		this.client.emit('user-created', createUserDto);
+		this.emailService.emit('user-created', createUserDto)
 		return { message: 'User created' };
 	}
 
 	findAll() {
-		return `This action returns all users`;
+		return this.client.send({cmd: 'fetch-users'}, {});
 	}
 
 	findOne(id: number) {
