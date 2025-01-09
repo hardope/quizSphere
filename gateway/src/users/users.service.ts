@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ClientProxy } from '@nestjs/microservices';
+import { timeout } from 'rxjs';
 
 @Injectable()
 export class UsersService {
@@ -19,7 +20,9 @@ export class UsersService {
 	}
 
 	findAll() {
-		return this.client.send({cmd: 'fetch-users'}, {});
+		return this.client.send({cmd: 'fetch-users'}, {}).pipe(
+			timeout(5000)
+		);
 	}
 
 	findOne(id: number) {
