@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ClientProxy } from '@nestjs/microservices';
@@ -12,11 +12,13 @@ export class UsersService {
 		@Inject('NOTIFICATION_SERVICE') private readonly notificationService: ClientProxy
 	) {}
 	
-
-	create(createUserDto: CreateUserDto) {
-		this.userService.emit('user-created', createUserDto);
-		this.notificationService.emit('user-created', createUserDto)
-		return { message: 'User created' };
+	async create(createUserDto: CreateUserDto) {
+		const response = await this.userService.send({cmd: 'user-created'}, createUserDto).toPromise();
+		if (!response?.status) {
+			throw new BadRequestException('User already exists.');
+		}
+		this.notificationService.emit('user-created', createUserDto);
+		return response;
 	}
 
 	findAll() {
