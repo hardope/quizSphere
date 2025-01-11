@@ -13,10 +13,10 @@ export class UsersService {
 	) {}
 	
 
-	create(createUserDto: CreateUserDto) {
-		this.userService.emit('user-created', createUserDto);
+	async create(createUserDto: CreateUserDto) {
+		const userRes = this.userService.send({cmd: 'user-created'}, createUserDto).toPromise();
 		this.notificationService.emit('user-created', createUserDto)
-		return { message: 'User created' };
+		return userRes;
 	}
 
 	findAll() {
