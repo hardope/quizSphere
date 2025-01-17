@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ClientProxy } from '@nestjs/microservices';
@@ -14,9 +14,16 @@ export class UsersService {
 	
 
 	async create(createUserDto: CreateUserDto) {
-		const userRes = this.userService.send({cmd: 'user-created'}, createUserDto).toPromise();
-		this.notificationService.emit('user-created', createUserDto)
-		return userRes;
+		const userRes = await this.userService.send({cmd: 'user-created'}, createUserDto).toPromise();
+		if (userRes.status) {
+			this.notificationService.emit('user-created', {
+				...createUserDto,
+				id: userRes.user.id
+			})
+			return userRes;
+		} else {
+			throw new BadRequestException(userRes.message);
+		}
 	}
 
 	findAll() {
