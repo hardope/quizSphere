@@ -1,8 +1,8 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { ClientProxy } from '@nestjs/microservices';
 import { timeout } from 'rxjs';
+import { UpdateUserDTO } from '@app/common/dto/updateUser.dto';
 
 @Injectable()
 export class UsersService {
@@ -32,15 +32,28 @@ export class UsersService {
 		);
 	}
 
-	findOne(id: number) {
-		return `This action returns a #${id} user`;
+	async findOne(id: string) {
+		const user = await this.userService.send({cmd: 'fetch-user-by-id'}, id).toPromise();
+		if (!user) {
+			throw new BadRequestException('User not found');
+		}
+		return user;
 	}
 
-	update(id: number, updateUserDto: UpdateUserDto) {
-		return `This action updates a #${id} user`;
+	async update(id: string, updateUserDto: UpdateUserDTO, req: any) {
+		const user = await this.userService.send({cmd: 'update-user'}, {id: id, data: updateUserDto, user: req.user}).toPromise();
+		if (!user) {
+			throw new BadRequestException('User not found');
+		} else if (!user.status) {
+			throw new BadRequestException(user.message);
+		}
+
+		return user;
 	}
 
-	remove(id: number) {
-		return `This action removes a #${id} user`;
+	async getUserByEmail(email: string) {
+		return this.userService.send({cmd: 'fetch-user-by-email'}, {email}).pipe(
+			timeout(5000)
+		);
 	}
 }

@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '../auth/jwt/jwt.guard';
+import { UpdateUserDTO } from '@app/common/dto/updateUser.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -25,17 +26,30 @@ export class UsersController {
 		return this.usersService.findAll();
 	}	
 
-	// @Get(':id')
-	// @ApiOperation({ summary: 'Get a user by ID' })
-	// findOne(@Param('id') id: string) {
-	// 	return this.usersService.findOne(+id);
-	// }
+	@Get(':id')
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	@ApiOperation({ summary: 'Get a user by ID' })
+	findOne(@Param('id') id: string) {
+		console.log(id);
+		return this.usersService.findOne(id);
+	}
 
-	// @Patch(':id')
-	// @ApiOperation({ summary: 'Update a user by ID' })
-	// update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-	// 	return this.usersService.update(+id, updateUserDto);
-	// }
+	@Patch(':id')
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	@ApiOperation({ summary: 'Update a user by ID' })
+	update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDTO, @Req() req) {
+		return this.usersService.update(id, updateUserDto, req);
+	}
+
+	@Get('email/:email')
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	@ApiOperation({ summary: 'Get a user by email' })
+	getUserByEmail(@Param('email') email: string) {
+		return this.usersService.getUserByEmail(email);
+	}
 
 	// @Delete(':id')
 	// @ApiOperation({ summary: 'Delete a user by ID' })
