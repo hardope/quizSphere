@@ -71,12 +71,33 @@ The project is structured as follows:
 .
 |-- README.md
 |-- apps
+|   |-- authentication
+|   |   |-- src
+|   |   |   |-- authentication.controller.spec.ts
+|   |   |   |-- authentication.controller.ts
+|   |   |   |-- authentication.module.ts
+|   |   |   |-- authentication.service.ts
+|   |   |   `-- main.ts
+|   |   |-- test
+|   |   |   |-- app.e2e-spec.ts
+|   |   |   `-- jest-e2e.json
+|   |   `-- tsconfig.app.json
 |   |-- gateway
 |   |   |-- src
-|   |   |   |-- app.controller.spec.ts
-|   |   |   |-- app.controller.ts
-|   |   |   |-- app.module.ts
-|   |   |   |-- app.service.ts
+|   |   |   |-- auth
+|   |   |   |   |-- auth.controller.spec.ts
+|   |   |   |   |-- auth.controller.ts
+|   |   |   |   |-- auth.module.ts
+|   |   |   |   |-- auth.service.spec.ts
+|   |   |   |   |-- auth.service.ts
+|   |   |   |   |-- dto
+|   |   |   |   |   |-- create-auth.dto.ts
+|   |   |   |   |   `-- update-auth.dto.ts
+|   |   |   |   `-- entities
+|   |   |   |       `-- auth.entity.ts
+|   |   |   |-- gateway.controller.ts
+|   |   |   |-- gateway.module.ts
+|   |   |   |-- gateway.service.ts
 |   |   |   |-- main.ts
 |   |   |   `-- users
 |   |   |       |-- dto
@@ -93,6 +114,8 @@ The project is structured as follows:
 |   |   `-- tsconfig.app.json
 |   |-- notification
 |   |   |-- src
+|   |   |   |-- mail
+|   |   |   |   `-- mail.service.ts
 |   |   |   |-- main.ts
 |   |   |   |-- notification.controller.ts
 |   |   |   |-- notification.module.ts
@@ -124,6 +147,8 @@ The project is structured as follows:
 |-- libs
 |   |-- common
 |   |   |-- src
+|   |   |   |-- dto
+|   |   |   |   `-- auth.dto.ts
 |   |   |   |-- index.ts
 |   |   |   |-- prisma.module.ts
 |   |   |   `-- prisma.service.ts
@@ -131,6 +156,8 @@ The project is structured as follows:
 |   `-- prisma
 |       |-- migrations
 |       |   |-- 20250108223539_user
+|       |   |   `-- migration.sql
+|       |   |-- 20250111182634_verify
 |       |   |   `-- migration.sql
 |       |   `-- migration_lock.toml
 |       |-- schema.prisma
