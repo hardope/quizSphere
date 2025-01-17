@@ -14,6 +14,12 @@ export class AuthController {
 		return this.authService.handleAuth(data);
 	}
 
+	@Post('validate-email/:email/:token')
+	@ApiOperation({ summary: 'Validate email' })
+	validateEmail(@Param('email') email: string, @Param('token') token: string) {
+		return this.authService.validateEmail({email, token});
+	}
+
 	// @Get()
 	// findAll() {
 	//   return this.authService.findAll();

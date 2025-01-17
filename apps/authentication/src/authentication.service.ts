@@ -46,4 +46,53 @@ constructor (
 			return null;
 		}
 	}
+
+	async validateEmail(email: string, token: string) {
+		// console.log(email, token)
+		try {
+			const user = await this.prisma.user.findUnique({
+				where: {
+					email: email
+				}
+			});
+
+			if (user) {
+				const verificationToken = await this.prisma.verificationToken.findFirst({
+					where: {
+						userId: user.id,
+						type: 'EmailVerification'
+					}
+				})
+
+				if (verificationToken?.createdAt <= new Date(Date.now() - 5 * 60 * 1000)) {
+					Logger.log(`Token expired for ${email}`, 'AuthService - validateEmail');
+					return {
+						expired: true
+					};
+				}
+
+				if (verificationToken?.token == token) {
+					console.log('here')
+					const updatedUser = await this.prisma.user.update({
+						where: {
+							id: user.id
+						},
+						data: {
+							isEmailVerified: true
+						}
+					});
+
+					if (updatedUser) {
+						Logger.log(`User email verified ${email}`, 'AuthService - validateEmail');
+						return true;
+					}
+				}
+			}
+
+			return false;
+		} catch (error) {
+			Logger.error(error, 'AuthService - validateEmail');
+			return false;
+		}
+	}
 }

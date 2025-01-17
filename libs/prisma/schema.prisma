@@ -28,6 +28,7 @@ model VerificationToken {
 	id        Int	   @id @default(autoincrement())
 	userId    String
 	token     String   @unique @default(uuid())
+	type      TokenType @default(EmailVerification)
 	utilized  Boolean  @default(false)
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
@@ -91,3 +92,8 @@ model VerificationToken {
 // 	MultiChoice
 // 	Essay 
 // }
+
+enum TokenType {
+	EmailVerification
+	PasswordReset
+}

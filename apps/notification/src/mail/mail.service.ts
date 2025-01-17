@@ -24,6 +24,7 @@ export class MailService {
         const verification = await this.prisma.verificationToken.create({
             data: {
                 userId: user.id,
+                type: 'EmailVerification'
             },
         });
 

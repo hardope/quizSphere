@@ -16,4 +16,9 @@ export class AuthenticationController {
 	validateUser(@Payload() data: AuthDTO) {
 		return this.authService.validateUser(data.email, data.password);
 	}
+
+	@MessagePattern({ cmd: 'validateEmail' })
+	validateEmail(@Payload() data: { email: string; token: string }) {
+		return this.authService.validateEmail(data.email, data.token);
+	}
 }

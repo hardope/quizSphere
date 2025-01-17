@@ -23,6 +23,25 @@ export class AuthService {
 		}
 	}
 
+	async validateEmail(data: { email: string; token: string }) {
+		try {
+			const res = await this.authService.send({cmd: 'validateEmail'}, data).toPromise();
+
+			if (res?.expired) {
+				throw new BadRequestException("Token expired");
+			} else if (res) {
+				return {
+					status: true,
+					message: "Email verified successfully"
+				}
+			}
+			throw new BadRequestException("Invalid token");
+		} catch (error) {
+			Logger.error(error, 'AuthService - validateEmail');
+			throw error;
+		}
+	}
+
 	// findAll() {
 	// 	return `This action returns all auth`;
 	// }
