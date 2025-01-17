@@ -15,6 +15,14 @@ import { ConfigService } from '@nestjs/config';
 					queue: 'auth_queue',
 				},
 			},
+			{
+				name: 'NOTIFICATION_SERVICE',
+				transport: Transport.RMQ,
+				options: {
+					urls: ['amqp://localhost:5672'],
+					queue: 'notification_queue',
+				},
+			}
 		]),
 	],
 	controllers: [AuthController],

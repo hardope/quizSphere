@@ -21,4 +21,9 @@ export class AuthenticationController {
 	validateEmail(@Payload() data: { email: string; token: string }) {
 		return this.authService.validateEmail(data.email, data.token);
 	}
+
+	@MessagePattern({ cmd: 'passwordReset' })
+	passwordReset(@Payload() data: { password: string; token: string }) {
+		return this.authService.passwordReset(data.password, data.token);
+	}
 }

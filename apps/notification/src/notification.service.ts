@@ -14,5 +14,10 @@ export class NotificationService {
         Logger.log(`Emailing User: ${user.email}`, 'NotificationService');
     }
 
+    handleRequestPsswordReset(user: any) {
+        this.mailService.requestPasswordReset(user.email);
+        Logger.log(`Requesting Password Reset: ${user.email}`, 'NotificationService');
+    }
+
 
 }

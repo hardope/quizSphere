@@ -57,17 +57,37 @@ constructor (
 			});
 
 			if (user) {
+				if (user.isEmailVerified) {
+					Logger.log(`User email already verified ${email}`, 'AuthService - validateEmail');
+					return {
+						status: false,
+						message: 'Email already verified'
+					};
+				}
 				const verificationToken = await this.prisma.verificationToken.findFirst({
 					where: {
 						userId: user.id,
 						type: 'EmailVerification'
+					},
+					orderBy: {
+						createdAt: 'desc'
 					}
-				})
+				});
+
+				if (!verificationToken || verificationToken.utilized) {
+					Logger.log(`Token not found or already utilized for ${email}`, 'AuthService - validateEmail');
+					return {
+						status: false,
+						message: 'Invalid token'
+					};
+				}
 
 				if (verificationToken?.createdAt <= new Date(Date.now() - 5 * 60 * 1000)) {
 					Logger.log(`Token expired for ${email}`, 'AuthService - validateEmail');
 					return {
-						expired: true
+						expired: true,
+						status: false,
+						message: 'Token expired'
 					};
 				}
 
@@ -81,18 +101,116 @@ constructor (
 							isEmailVerified: true
 						}
 					});
+					await this.prisma.verificationToken.update({
+						where: {
+							id: verificationToken.id
+						},
+						data: {
+							utilized: true
+						}
+					});
 
 					if (updatedUser) {
 						Logger.log(`User email verified ${email}`, 'AuthService - validateEmail');
-						return true;
+						return {
+							status: true,
+							message: 'Email verified successfully'
+						}
 					}
 				}
 			}
 
-			return false;
+			return {
+				status: false,
+				message: 'Invalid token'
+			};
 		} catch (error) {
 			Logger.error(error, 'AuthService - validateEmail');
-			return false;
+			return {
+				status: false,
+				message: 'Invalid token'
+			}
 		}
 	}
+
+	async passwordReset(password: string, token: string) {
+
+		try {
+			const verificationToken = await this.prisma.verificationToken.findFirst({
+				where: {
+					token: token,
+					type: 'PasswordReset'
+				},
+				orderBy: {
+					createdAt: 'desc'
+				}
+			});
+
+			if (!verificationToken || verificationToken.utilized) {
+				Logger.log(`Token not found or already utilized for password reset`, 'AuthService - passwordReset');
+				return {
+					status: false,
+					message: 'Invalid token'
+				};
+			}
+
+			if (verificationToken?.createdAt <= new Date(Date.now() - 5 * 60 * 1000)) {
+				Logger.log(`Token expired for password reset`, 'AuthService - passwordReset');
+				return {
+					expired: true,
+					status: false,
+					message: 'Token expired'
+				};
+			}
+
+			const user = await this.prisma.user.findUnique({
+				where: {
+					id: verificationToken.userId
+				}
+			});
+
+			if (user) {
+				const hashedPassword = bcrypt.hashSync(password, 10);
+				const updatedUser = await this.prisma.user.update({
+					where: {
+						id: user.id
+					},
+					data: {
+						password: hashedPassword
+					}
+				});
+				await this.prisma.verificationToken.update({
+					where: {
+						id: verificationToken.id
+					},
+					data: {
+						utilized: true
+					}
+				});
+
+				if (updatedUser) {
+					Logger.log(`User password reset successfully`, 'AuthService - passwordReset');
+					return {
+						status: true,
+						message: 'Password reset successfully'
+					}
+				}
+
+			} else {
+				Logger.log(`User not found for password reset`, 'AuthService - passwordReset');
+				return {
+					status: false,
+					message: 'Invalid token'
+				};
+			}
+
+		} catch (error) {
+			Logger.error(error, 'AuthService - passwordReset');
+			return {
+				status: false,
+				message: 'Invalid token'
+			}
+		}
+	}
+		
 }

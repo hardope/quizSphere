@@ -11,4 +11,9 @@ export class NotificationController {
     handleCreatedUser(@Payload() data: UserDto) {
         return this.notifiationService.handleCreatedUser(data);
     }
+
+    @EventPattern('request-password-reset')
+    handleRequestPasswordReset(@Payload() data: { email: string }) {
+        return this.notifiationService.handleRequestPsswordReset(data);
+    }
 }

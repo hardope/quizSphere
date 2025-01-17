@@ -8,6 +8,7 @@ export class AuthService {
 
 	constructor (
 		@Inject('AUTHENTICATION_SERVICE') private readonly authService: ClientProxy,
+		@Inject('NOTIFICATION_SERVICE') private readonly notificationService: ClientProxy
 	) {}
 
 	async handleAuth(data: AuthDTO) {
@@ -27,17 +28,39 @@ export class AuthService {
 		try {
 			const res = await this.authService.send({cmd: 'validateEmail'}, data).toPromise();
 
-			if (res?.expired) {
-				throw new BadRequestException("Token expired");
-			} else if (res) {
-				return {
-					status: true,
-					message: "Email verified successfully"
-				}
+			if (res.status) {
+				return res;
 			}
-			throw new BadRequestException("Invalid token");
+			throw new BadRequestException(res.message);
 		} catch (error) {
 			Logger.error(error, 'AuthService - validateEmail');
+			throw error;
+		}
+	}
+
+	async requestPasswordReset(email: string) {
+		try {
+			this.notificationService.emit('request-password-reset', {email});
+			
+			return {
+				status: true,
+				message: 'Password reset link sent to email'
+			}
+		} catch (error) {
+			Logger.error(error, 'AuthService - requestPasswordReset');
+			throw error;
+		}
+	}
+
+	async resetPassword(data: { password: string; token: string }) {
+		try {
+			const res = await this.authService.send({cmd: 'passwordReset'}, data).toPromise();
+			if (res.status) {
+				return res;
+			}
+			throw new BadRequestException(res.message);
+		} catch (error) {
+			Logger.error(error, 'AuthService - resetPassword');
 			throw error;
 		}
 	}

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { AuthService } from './auth.service';
 import { AuthDTO } from '@app/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { PasswordResetDto } from './dto/password-reset.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -18,6 +19,18 @@ export class AuthController {
 	@ApiOperation({ summary: 'Validate email' })
 	validateEmail(@Param('email') email: string, @Param('token') token: string) {
 		return this.authService.validateEmail({email, token});
+	}
+
+	@Post('request-password-reset/:email')
+	@ApiOperation({ summary: 'Request password reset' })
+	requestPasswordReset(@Param('email') email: string) {
+		return this.authService.requestPasswordReset(email);
+	}
+
+	@Post('reset-password/')
+	@ApiOperation({ summary: 'Reset password' })
+	resetPassword( @Body() data: PasswordResetDto) {
+		return this.authService.resetPassword(data);
 	}
 
 	// @Get()
