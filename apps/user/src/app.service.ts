@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserDto } from './user.dto';
 import { PrismaService } from '@app/common';
 import * as bcrypt from 'bcrypt';
@@ -27,6 +27,7 @@ export class AppService {
                     }
                 }
             } else {
+                Logger.log(error);
                 return {
                     message: 'An error occurred',
                     status: false
