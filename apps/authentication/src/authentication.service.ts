@@ -27,9 +27,7 @@ constructor (
 				return null;
 			}
 
-			const hashedPassword = await bcrypt.hash(password, 10);
-			
-			if (bcrypt.compareSync(password, hashedPassword)) {
+			if (bcrypt.compareSync(password, user.password)) {
 				const { password, ...result } = user;
 				Logger.log(`Authorized User ${email}`, 'AuthService - validateUser');
 				return{

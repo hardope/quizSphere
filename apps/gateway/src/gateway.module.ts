@@ -6,6 +6,10 @@ import { UsersModule } from './users/users.module';
 import { UsersService } from './users/users.service';
 import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './auth/jwt/jwt.strategy';
+import { ConfigService } from '@nestjs/config';
 
 
 @Module({
@@ -38,9 +42,13 @@ import { AuthModule } from './auth/auth.module';
 				},
 			}
 		]),
+		PassportModule.register({ defaultStrategy: 'jwt' }),
+		JwtModule.register({
+			secret: process.env.JWT_SECRET,
+		}),
 	],
 	controllers: [GatewayController],
-	providers: [GatewayService, UsersService, AuthService],
+	providers: [GatewayService, UsersService, AuthService, JwtStrategy, ConfigService],
 	exports: [ClientsModule]
 })
 export class AppModule {}
