@@ -21,21 +21,21 @@ export class UsersController {
 		return this.usersService.findAll();
 	}	
 
-	@Get(':id')
-	@ApiOperation({ summary: 'Get a user by ID' })
-	findOne(@Param('id') id: string) {
-		return this.usersService.findOne(+id);
-	}
+	// @Get(':id')
+	// @ApiOperation({ summary: 'Get a user by ID' })
+	// findOne(@Param('id') id: string) {
+	// 	return this.usersService.findOne(+id);
+	// }
 
-	@Patch(':id')
-	@ApiOperation({ summary: 'Update a user by ID' })
-	update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-		return this.usersService.update(+id, updateUserDto);
-	}
+	// @Patch(':id')
+	// @ApiOperation({ summary: 'Update a user by ID' })
+	// update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+	// 	return this.usersService.update(+id, updateUserDto);
+	// }
 
-	@Delete(':id')
-	@ApiOperation({ summary: 'Delete a user by ID' })
-	remove(@Param('id') id: string) {
-		return this.usersService.remove(+id);
-	}
+	// @Delete(':id')
+	// @ApiOperation({ summary: 'Delete a user by ID' })
+	// remove(@Param('id') id: string) {
+	// 	return this.usersService.remove(+id);
+	// }
 }

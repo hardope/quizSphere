@@ -55,7 +55,7 @@ export class MailService {
             });
             return true;
         } catch (error) {
-            Logger.error(error);
+            Logger.error(error, 'NotificationService - MailService');
             return false;
         }
     }

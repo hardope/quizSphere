@@ -27,7 +27,7 @@ export class AppService {
                     }
                 }
             } else {
-                Logger.log(error);
+                Logger.log(error, 'UserService - AppService');
                 return {
                     message: 'An error occurred',
                     status: false
