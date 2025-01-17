@@ -1,12 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserDto } from './user.dto';
-
-const users = [];
+import { MailService } from './mail/mail.service';
 
 @Injectable()
 export class NotificationService {
+
+    constructor (
+        private readonly mailService: MailService
+    ) {}
+
     handleCreatedUser (user: UserDto) {
-        console.log('Emailing User:', user);
+        this.mailService.userCreated(user);
+        Logger.log(`Emailing User: ${user.email}`, 'NotificationService');
     }
 
 
