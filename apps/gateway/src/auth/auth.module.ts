@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 				name: 'AUTHENTICATION_SERVICE',
 				transport: Transport.RMQ,
 				options: {
-					urls: ['amqp://localhost:5672'],
+					urls: [process.env.RABBITMQ_URL],
 					queue: 'auth_queue',
 				},
 			},
@@ -19,7 +19,7 @@ import { ConfigService } from '@nestjs/config';
 				name: 'NOTIFICATION_SERVICE',
 				transport: Transport.RMQ,
 				options: {
-					urls: ['amqp://localhost:5672'],
+					urls: [process.env.RABBITMQ_URL],
 					queue: 'notification_queue',
 				},
 			}

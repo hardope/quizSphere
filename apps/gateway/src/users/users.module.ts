@@ -10,7 +10,7 @@
 					name: 'USER_SERVICE',
 					transport: Transport.RMQ,
 					options: {
-						urls: ['amqp://localhost:5672'],
+						urls: [process.env.RABBITMQ_URL],
 						queue: 'user_queue',
 					},
 				},
@@ -18,7 +18,7 @@
 					name: 'NOTIFICATION_SERVICE',
 					transport: Transport.RMQ,
 					options: {
-						urls: ['amqp://localhost:5672'],
+						urls: [process.env.RABBITMQ_URL],
 						queue: 'notification_queue',
 					},
 				}

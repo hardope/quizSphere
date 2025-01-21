@@ -34,17 +34,18 @@ model VerificationToken {
 	updatedAt DateTime @updatedAt
 }
 
-// model Quiz {
-// 	id          String     @id @default(cuid())
-// 	title       String
-// 	description String?
-// 	authorId String
-// 	timeLimit   Int?
-// 	createdAt   DateTime   @default(now())
-// 	updatedAt   DateTime   @updatedAt
-// 	expire 		Boolean?
-// 	expiresAt   DateTime?
-// }
+model Quiz {
+	id          String     @id @default(cuid())
+	title       String
+	description String?
+	authorId    String
+	leaderboard Boolean    @default(false)
+	timeLimit   Int?
+	createdAt   DateTime   @default(now())
+	updatedAt   DateTime   @updatedAt
+	expire 		Boolean?
+	expiresAt   DateTime?
+}
 
 // model Question {
 // 	id        String   @id @default(cuid())

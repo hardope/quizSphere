@@ -63,6 +63,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/authentication/tsconfig.app.json"
       }
+    },
+    "quiz": {
+      "type": "application",
+      "root": "apps/quiz",
+      "entryFile": "main",
+      "sourceRoot": "apps/quiz/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/quiz/tsconfig.app.json"
+      }
     }
   }
 }

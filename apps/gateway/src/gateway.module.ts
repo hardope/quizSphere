@@ -10,12 +10,14 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './auth/jwt/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
+import { QuizModule } from './quiz/quiz.module';
 
 
 @Module({
 	imports: [
 		UsersModule,
 		AuthModule,
+		QuizModule,
 		ClientsModule.register([
 			{
 				name: 'USER_SERVICE',
@@ -39,6 +41,14 @@ import { ConfigService } from '@nestjs/config';
 				options: {
 					urls: [process.env.RABBITMQ_URL],
 					queue: 'auth_queue',
+				},
+			},
+			{
+				name: 'QUIZ_SERVICE',
+				transport: Transport.RMQ,
+				options: {
+					urls: [process.env.RABBITMQ_URL],
+					queue: 'quiz_queue',
 				},
 			}
 		]),
