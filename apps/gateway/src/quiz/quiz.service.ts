@@ -39,7 +39,7 @@ export class QuizService {
     async fetchQuizById (id: string) {
         try {
             const res = await this.quizMicroService.send({ cmd: 'fetch-quiz-by-id' }, id).toPromise();
-            console.log(res)
+
             if (!res) {
                 throw new NotFoundException('Quiz not found');
             }
