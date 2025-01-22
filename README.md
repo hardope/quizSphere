@@ -12,6 +12,7 @@ The application follows a microservices architecture using NestJs within a monor
 - **Auth Service**: Manages authentication and authorization.
 - **Quiz Service**: Handles quiz creation, management, and retrieval.
 - **User Service**: Manages user data and profiles.
+- **Notifications Service**: Sends email notifications to users.
 - **Results Service**: Processes and stores quiz results.
 
 ### Communication
@@ -72,6 +73,7 @@ The project is structured as follows:
 |-- README.md
 |-- apps
 |   |-- authentication
+|   |   |-- Dockerfile
 |   |   |-- src
 |   |   |   |-- authentication.controller.spec.ts
 |   |   |   |-- authentication.controller.ts
@@ -83,6 +85,7 @@ The project is structured as follows:
 |   |   |   `-- jest-e2e.json
 |   |   `-- tsconfig.app.json
 |   |-- gateway
+|   |   |-- Dockerfile
 |   |   |-- src
 |   |   |   |-- auth
 |   |   |   |   |-- auth.controller.spec.ts
@@ -92,13 +95,23 @@ The project is structured as follows:
 |   |   |   |   |-- auth.service.ts
 |   |   |   |   |-- dto
 |   |   |   |   |   |-- create-auth.dto.ts
+|   |   |   |   |   |-- password-reset.dto.ts
 |   |   |   |   |   `-- update-auth.dto.ts
-|   |   |   |   `-- entities
-|   |   |   |       `-- auth.entity.ts
+|   |   |   |   |-- entities
+|   |   |   |   |   `-- auth.entity.ts
+|   |   |   |   `-- jwt
+|   |   |   |       |-- jwt.guard.ts
+|   |   |   |       `-- jwt.strategy.ts
 |   |   |   |-- gateway.controller.ts
 |   |   |   |-- gateway.module.ts
 |   |   |   |-- gateway.service.ts
 |   |   |   |-- main.ts
+|   |   |   |-- quiz
+|   |   |   |   |-- quiz.controller.spec.ts
+|   |   |   |   |-- quiz.controller.ts
+|   |   |   |   |-- quiz.module.ts
+|   |   |   |   |-- quiz.service.spec.ts
+|   |   |   |   `-- quiz.service.ts
 |   |   |   `-- users
 |   |   |       |-- dto
 |   |   |       |   |-- create-user.dto.ts
@@ -113,6 +126,7 @@ The project is structured as follows:
 |   |   |   `-- jest-e2e.json
 |   |   `-- tsconfig.app.json
 |   |-- notification
+|   |   |-- Dockerfile
 |   |   |-- src
 |   |   |   |-- mail
 |   |   |   |   `-- mail.service.ts
@@ -125,7 +139,19 @@ The project is structured as follows:
 |   |   |   |-- app.e2e-spec.ts
 |   |   |   `-- jest-e2e.json
 |   |   `-- tsconfig.app.json
+|   |-- quiz
+|   |   |-- Dockerfile
+|   |   |-- src
+|   |   |   |-- main.ts
+|   |   |   |-- quiz.controller.ts
+|   |   |   |-- quiz.module.ts
+|   |   |   `-- quiz.service.ts
+|   |   |-- test
+|   |   |   |-- app.e2e-spec.ts
+|   |   |   `-- jest-e2e.json
+|   |   `-- tsconfig.app.json
 |   `-- user
+|       |-- Dockerfile
 |       |-- src
 |       |   |-- app.controller.ts
 |       |   |-- app.module.ts
@@ -138,17 +164,24 @@ The project is structured as follows:
 |       `-- tsconfig.app.json
 |-- dist
 |   `-- apps
+|       |-- authentication
+|       |   `-- main.js
 |       |-- gateway
 |       |   `-- main.js
 |       |-- notification
 |       |   `-- main.js
+|       |-- quiz
+|       |   `-- main.js
 |       `-- user
 |           `-- main.js
+|-- docker-compose.yml
 |-- libs
 |   |-- common
 |   |   |-- src
 |   |   |   |-- dto
-|   |   |   |   `-- auth.dto.ts
+|   |   |   |   |-- auth.dto.ts
+|   |   |   |   |-- createQuiz.dto.ts
+|   |   |   |   `-- updateUser.dto.ts
 |   |   |   |-- index.ts
 |   |   |   |-- prisma.module.ts
 |   |   |   `-- prisma.service.ts
@@ -159,6 +192,10 @@ The project is structured as follows:
 |       |   |   `-- migration.sql
 |       |   |-- 20250111182634_verify
 |       |   |   `-- migration.sql
+|       |   |-- 20250117110400_update_verification_token
+|       |   |   `-- migration.sql
+|       |   |-- 20250122152707_quiz
+|       |   |   `-- migration.sql
 |       |   `-- migration_lock.toml
 |       |-- schema.prisma
 |       `-- tsconfig.lib.json
@@ -167,4 +204,6 @@ The project is structured as follows:
 |-- package.json
 |-- tsconfig.build.json
 `-- tsconfig.json
+
+43 directories, 92 files
 ```
