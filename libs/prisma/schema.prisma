@@ -45,26 +45,28 @@ model Quiz {
 	updatedAt   DateTime   @updatedAt
 	expire 		Boolean?
 	expiresAt   DateTime?
+	published   Boolean    @default(false)
 }
 
-// model Question {
-// 	id        String   @id @default(cuid())
-// 	text      String
-// 	quizId    String
-// 	createdAt DateTime @default(now())
-// 	updatedAt DateTime @updatedAt
-// 	score	  Float?
-// 	type	  QuestionType
-// }
+model Question {
+	id        String   @id @default(cuid())
+	text      String
+	quizId    String
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	points	  Float?
+	booleanAnswer Boolean?
+	type	  QuestionType
+}
 
-// model Option {
-// 	id         String   @id @default(cuid())
-// 	text       String
-// 	isCorrect  Boolean  @default(false)
-// 	questionId String
-// 	createdAt  DateTime @default(now())
-// 	updatedAt  DateTime @updatedAt
-// }
+model Option {
+	id         String   @id @default(cuid())
+	text       String
+	isCorrect  Boolean  @default(false)
+	questionId String
+	createdAt  DateTime @default(now())
+	updatedAt  DateTime @updatedAt
+}
 
 // model Answer {
 // 	id         String   @id @default(cuid())
@@ -83,16 +85,18 @@ model Quiz {
 // 	quizId      String
 // 	startTime   DateTime
 // 	endTime     DateTime?
+// 	isScored	Boolean     @default(false)
 // 	score       Float?
 // 	completed   Boolean     @default(false)
 // 	createdAt   DateTime    @default(now())
 // 	updatedAt   DateTime    @updatedAt
 // }
 
-// enum QuestionType {
-// 	MultiChoice
-// 	Essay 
-// }
+enum QuestionType {
+	MultiChoice
+	Essay
+	Boolean
+}
 
 enum TokenType {
 	EmailVerification
