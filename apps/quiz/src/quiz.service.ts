@@ -48,7 +48,7 @@ export class QuizService {
 		}
 	}
 
-	async fetchQuizById (id: string) {
+	async fetchQuizById (id: string, userId: string) {
 		Logger.log('Fetching quiz by id...', 'QuizService');
 		try {
 			const quiz = await this.prisma.quiz.findUnique({
@@ -58,6 +58,12 @@ export class QuizService {
 			if (!quiz) {
 				return {
 					error: 'not-found'
+				}
+			}
+
+			if (quiz.authorId !== userId) {
+				return {
+					error: 'unauthorized'
 				}
 			}
 
@@ -79,6 +85,40 @@ export class QuizService {
 				...quiz,
 				questions: questionsWithOptions
 			};
+		} catch (error) {
+			Logger.error(error, 'QuizService');
+			return {
+				error: 'failed'
+			};
+		}
+	}
+
+	async viewQuiz (id: string) {
+		try {
+			const quiz = await this.prisma.quiz.findUnique({
+				where: { id }
+			});
+
+			if (!quiz) {
+				return {
+					error: 'not-found'
+				};
+			}
+
+			if (quiz.published === false) {
+				return {
+					error: 'quiz-not-published'
+				};
+			}
+
+			const questions = await this.prisma.question.findMany({
+				where: { quizId: id }
+			});
+
+			return {
+				...quiz,
+				totalQuestions: questions.length
+			}
 		} catch (error) {
 			Logger.error(error, 'QuizService');
 			return {
@@ -350,6 +390,121 @@ export class QuizService {
 				data: { published: true }
 			});
 
+		} catch (error) {
+			Logger.error(error, 'QuizService');
+			return {
+				error: 'failed'
+			};
+		}
+	}
+
+	async unpublishQuiz(id: string, authorId: string) {
+		Logger.log('Unpublishing quiz...', 'QuizService');
+		try {
+			const quiz = await this.prisma.quiz.findUnique({
+				where: { id }
+			});
+
+			if (!quiz) {
+				return {
+					error: 'not-found'
+				};
+			}
+
+			if (quiz.authorId !== authorId) {
+				return {
+					error: 'unauthorized'
+				};
+			}
+
+			return await this.prisma.quiz.update({
+				where: { id },
+				data: { published: false }
+			});
+		} catch (error) {
+			Logger.error(error, 'QuizService');
+			return {
+				error: 'failed'
+			};
+		}
+	}
+
+	async createAttempt (quizId: string, userId: string) {
+		Logger.log('Creating attempt...', 'QuizService');
+		try {
+			const quiz = await this.prisma.quiz.findUnique({
+				where: { id: quizId }
+			});
+
+			if (!quiz) {
+				return {
+					error: 'not-found'
+				};
+			}
+
+			if (userId === quiz.authorId) {
+				return {
+					error: 'failed'
+				}
+			}
+
+			if (quiz.published === false) {
+				return {
+					error: 'quiz-not-published'
+				};
+			}
+
+			const attempt = await this.prisma.attempt.findFirst({
+				where: {
+					quizId,
+					userId
+				}
+			});
+
+			if (attempt) {
+				return {
+					error: 'already-attempted'
+				};
+			}
+
+			const newAttempt = await this.prisma.attempt.create({
+				data: {
+					quizId,
+					userId
+				}
+			});
+
+			const questions = await this.prisma.question.findMany({
+				where: { quizId },
+				select: {
+					id: true,
+					text: true,
+					type: true,
+					points: true,
+				}
+			});
+
+			const questionsWithOptions = await Promise.all(questions.map(async (question) => {
+				const options = await this.prisma.option.findMany({
+					where: { questionId: question.id },
+					select: {
+						id: true,
+						text: true,
+					}
+				});
+				return {
+					...question,
+					options
+				};
+				})
+			)
+
+			return {
+				...quiz,
+				questions: questionsWithOptions,
+				totalQuestions: questions.length,
+				attemptId: newAttempt.id
+			};
 		} catch (error) {
 			Logger.error(error, 'QuizService');
 			return {

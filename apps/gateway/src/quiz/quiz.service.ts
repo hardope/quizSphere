@@ -37,12 +37,30 @@ export class QuizService {
         }
     }
 
-    async fetchQuizById (id: string) {
+    async viewQuiz (id: string) {
         try {
-            const res = await this.quizMicroService.send({ cmd: 'fetch-quiz-by-id' }, id).toPromise();
+            const res = await this.quizMicroService.send({ cmd: 'view-quiz' }, { id }).toPromise();
+            if (res.error) {
+                if (res.error === 'not-found') {
+                    throw new NotFoundException('Quiz not found');
+                } else {
+                    throw new BadRequestException('Unable to view quiz');
+                }
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async fetchQuizById (id: string, userId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'fetch-quiz-by-id' }, {id, userId}).toPromise();
 
             if (res.error) {
-                if (res.error == 'not-found') {
+                if (res.error == 'unauthorized') {
+                    throw new BadRequestException('Unauthorized');
+                } else if (res.error == 'not-found') {
                     throw new NotFoundException('Quiz not found');
                 } else {
                     throw new BadRequestException(res.error);
@@ -79,7 +97,9 @@ export class QuizService {
             const res = await this.quizMicroService.send({ cmd: 'add-question' }, { data, authorId, quizId }).toPromise();
 
             if (res.error) {
-                if (res.error === 'not-found') {
+                if (res.error === 'quiz-published') {
+                    throw new BadRequestException('Quiz is published');
+                } else if (res.error === 'not-found') {
                     throw new NotFoundException('Quiz not found');
                 } else if (res.error === 'unauthorized') {
                     throw new BadRequestException('Unauthorized');
@@ -173,6 +193,44 @@ export class QuizService {
                     throw new BadRequestException(`No correct options for question: ${res.error.question}`);
                 } else {
                     throw new BadRequestException('Unable to publish quiz');
+                }
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async unpublishQuiz (id: string, authorId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'unpublish-quiz' }, { id, authorId }).toPromise();
+
+            if (res.error) {
+                if (res.error === 'not-found') {
+                    throw new NotFoundException('Quiz not found');
+                } else if (res.error === 'unauthorized') {
+                    throw new BadRequestException('You are Unauthorized to perform this action');
+                } else {
+                    throw new BadRequestException('Unable to unpublish quiz');
+                }
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async attemptQuiz (id: string, userId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'attempt-quiz' }, { id, userId }).toPromise();
+
+            if (res.error) {
+                if (res.error === 'quiz-not-published') {
+                    throw new BadRequestException('Quiz not published');
+                } else if (res.error === 'not-found') {
+                    throw new NotFoundException('Quiz not found');
+                } else {
+                    throw new BadRequestException('Unable to attempt quiz');
                 }
             }
             return res;

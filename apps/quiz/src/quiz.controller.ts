@@ -27,8 +27,13 @@ export class QuizController {
 	}
 
 	@MessagePattern({ cmd: 'fetch-quiz-by-id' })
-	fetchQuizById(id: string) {
-		return this.quizService.fetchQuizById(id);
+	fetchQuizById(data: { id: string, userId: string }) {
+		return this.quizService.fetchQuizById(data.id, data.userId);
+	}
+
+	@MessagePattern({ cmd: 'view-quiz' })
+	viewQuiz(data: { id: string }) {
+		return this.quizService.viewQuiz(data.id);
 	}
 
 	@MessagePattern({ cmd: 'delete-quiz' })
@@ -59,5 +64,15 @@ export class QuizController {
 	@MessagePattern({ cmd: 'publish-quiz'})
 	publishQuiz(data: {id: string, authorId: string}) {
 		return this.quizService.publishQuiz(data.id, data.authorId);
+	}
+
+	@MessagePattern({ cmd: 'unpublish-quiz'})
+	unpublishQuiz(data: {id: string, authorId: string}) {
+		return this.quizService.unpublishQuiz(data.id, data.authorId);
+	}
+
+	@MessagePattern({ cmd: 'attempt-quiz'})
+	attemptQuiz(data: {id: string, userId: string}) {
+		return this.quizService.createAttempt(data.id, data.userId);
 	}
 }

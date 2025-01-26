@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { QuizService } from './quiz.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { addOptionDTO, addQuestionDTO, CreateQuizDTO } from '@app/common';
@@ -24,9 +24,17 @@ export class QuizController {
 	}
 
 	@Get(':id')
-	@ApiOperation({ summary: 'Fetch quiz by id' })
-	fetchQuizById(@Param('id') id: string) {
-		return this.quizService.fetchQuizById(id);
+	@ApiOperation({ summary: 'Fetch quiz by id - for quiz Owner' })
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	fetchQuizById(@Param('id') id: string, @Req() req) {
+		return this.quizService.fetchQuizById(id, req.user.id);
+	}
+
+	@Get(':id/view')
+	@ApiOperation({ summary: 'View quiz by id - for quiz taker' })
+	viewQuiz(@Param('id') id: string) {
+		return this.quizService.viewQuiz(id);
 	}
 
 	@Delete(':id')
@@ -75,6 +83,22 @@ export class QuizController {
 	@ApiBearerAuth()
 	publishQuiz(@Param('id') id: string, @Req() req) {
 		return this.quizService.publishQuiz(id, req.user.id);
+	}
+
+	@Post(':id/unpublish')
+	@ApiOperation({ summary: 'Unpublish quiz' })
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	unpublishQuiz(@Param('id') id: string, @Req() req) {
+		return this.quizService.unpublishQuiz(id, req.user.id);
+	}
+
+	@Patch(':id/attempt')
+	@ApiOperation({ summary: 'Attempt quiz' })
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	attemptQuiz(@Param('id') id: string, @Req() req) {
+		return this.quizService.attemptQuiz(id, req.user.id);
 	}
 
 }
