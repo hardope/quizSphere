@@ -2,7 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { QuizService } from './quiz.service';
 import { CreateQuizDTO } from '@app/common/dto/createQuiz.dto';
-import { addOptionDTO, addQuestionDTO } from '@app/common';
+import { addOptionDTO, addQuestionDTO, submitAnswerDTO } from '@app/common';
 
 @Controller()
 export class QuizController {
@@ -74,5 +74,40 @@ export class QuizController {
 	@MessagePattern({ cmd: 'attempt-quiz'})
 	attemptQuiz(data: {id: string, userId: string}) {
 		return this.quizService.createAttempt(data.id, data.userId);
+	}
+
+	@MessagePattern({ cmd: 'submit-answer'})
+	submitAnswer(data: {data: submitAnswerDTO, attemptId: string, questionId: string, userId: string}) {
+		return this.quizService.submitAnswer(data.attemptId, data.questionId, data.data, data.userId);
+	}
+
+	@MessagePattern({ cmd: 'finish-attempt' })
+	finishAttempt(data: { attemptId: string, userId: string }) {
+		return this.quizService.finishAttempt(data.attemptId, data.userId);
+	}
+
+	@MessagePattern({ cmd: 'view-attempt' })
+	viewAttempt(data: { attemptId: string, userId: string }) {
+		return this.quizService.viewAttempt(data.attemptId, data.userId);
+	}
+
+	@MessagePattern({ cmd: 'get-all-user-attempts' })
+	getAllUserAttempts(data: { userId: string }) {
+		return this.quizService.getAllUserAttempts(data.userId);
+	}
+
+	@MessagePattern({ cmd: 'get-all-unscored-attempts' })
+	getAllUnscoredAttempts() {
+		return this.quizService.getAllUnscoredAttempts();
+	}
+
+	@MessagePattern({ cmd: 'get-quiz-attempts' })
+	getQuizAttempts(data: { quizId: string, userId: string }) {
+		return this.quizService.getQuizAttempts(data.quizId, data.userId);
+	}
+
+	@MessagePattern({ cmd: 'score-answer' })
+	scoreAnswer(data: { answerId: string, userId: string, score: number }) {
+		return this.quizService.scoreAnswer(data.answerId, data.userId, data.score);
 	}
 }

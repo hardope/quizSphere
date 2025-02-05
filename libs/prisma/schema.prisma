@@ -68,16 +68,19 @@ model Option {
 	updatedAt  DateTime @updatedAt
 }
 
-// model Answer {
-// 	id         String   @id @default(cuid())
-// 	userId     String
-// 	questionId String
-// 	optionIds  String[] @default([])
-// 	optionId   String?
-// 	textAnswer String?
-// 	createdAt  DateTime @default(now())
-// 	updatedAt  DateTime @updatedAt
-// }
+model Answer {
+	id         String   @id @default(cuid())
+	attemptId  String
+	userId     String
+	questionId String
+	optionIds  String[] @default([])
+	optionId   String?
+	textAnswer String?
+	booleanAnswer Boolean?
+	score	   Float?
+	createdAt  DateTime @default(now())
+	updatedAt  DateTime @updatedAt
+}
 
 model Attempt {
 	id          String      @id @default(cuid())

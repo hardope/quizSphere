@@ -2,6 +2,7 @@
 	import { UsersService } from './users.service';
 	import { UsersController } from './users.controller';
 	import { ClientsModule, Transport } from '@nestjs/microservices';
+import { PrismaService } from '@app/common';
 
 	@Module({
 		imports: [
@@ -25,6 +26,6 @@
 			]),
 		],
 		controllers: [UsersController],
-		providers: [UsersService],
+		providers: [UsersService, PrismaService],
 	})
 	export class UsersModule {}

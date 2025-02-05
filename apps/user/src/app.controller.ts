@@ -11,6 +11,7 @@ export class AppController {
 
     @MessagePattern({ cmd:'user-created' })
     handleCreatedUser(@Payload() data: UserDto) {
+        console.log(data)
         return this.appService.handleCreatedUser(data);
     }
 

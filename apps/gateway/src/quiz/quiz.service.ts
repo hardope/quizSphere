@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { addOptionDTO, addQuestionDTO, CreateQuizDTO } from '@app/common';
+import { addOptionDTO, addQuestionDTO, CreateQuizDTO, submitAnswerDTO } from '@app/common';
 // import { error } from 'console';
 
 @Injectable()
@@ -231,6 +231,145 @@ export class QuizService {
                     throw new NotFoundException('Quiz not found');
                 } else {
                     throw new BadRequestException('Unable to attempt quiz');
+                }
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async submitAnswer(attemptId: string, questionId: string, data: submitAnswerDTO, userId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'submit-answer' }, { attemptId, questionId, data, userId }).toPromise();
+
+            if (res.error) {
+                if (res.error === 'question-not-found') {
+                    throw new NotFoundException('Question not found');
+                } else if (res.error === 'attempt-not-found') {
+                    throw new NotFoundException('Attempt not found');
+                } else if (res.error === 'unauthorized') {
+                    throw new BadRequestException('Unauthorized');
+                } else if (res.error === 'time-up') {
+                    throw new BadRequestException('Time is up');
+                } else if (res.error === 'question-not-in-quiz') {
+                    throw new BadRequestException('Question not in quiz');
+                } else if (res.error === 'text-answer-not-allowed') {
+                    throw new BadRequestException('Text answer not allowed');
+                } else if (res.error === 'option-answer-not-allowed') {
+                    throw new BadRequestException('Option answer not allowed');
+                } else if (res.error === 'boolean-answer-not-allowed') {
+                    throw new BadRequestException('Boolean answer not allowed');
+                } else if (res.error === 'option-not-found') {
+                    throw new NotFoundException('Option not found');
+                } else {
+                    throw new BadRequestException('Failed to submit answer');
+                }
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async finishAttempt(attemptId: string, userId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'finish-attempt' }, { attemptId, userId }).toPromise();
+
+            if (res.error) {
+                if (res.error === 'not-found') {
+                    throw new NotFoundException('Attempt not found');
+                } else if (res.error === 'unauthorized') {
+                    throw new BadRequestException('Unauthorized');
+                } else {
+                    throw new BadRequestException('Unable to finish attempt');
+                }
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async viewAttempt(attemptId: string, userId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'view-attempt' }, { attemptId, userId }).toPromise();
+
+            if (res.error) {
+                if (res.error === 'not-found') {
+                    throw new NotFoundException('Attempt not found');
+                } else if (res.error === 'unauthorized') {
+                    throw new BadRequestException('Unauthorized');
+                } else {
+                    throw new BadRequestException('Unable to view attempt');
+                }
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getAllUserAttempts(userId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'get-all-user-attempts' }, { userId }).toPromise();
+
+            if (res.error) {
+                throw new BadRequestException(res.error);
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getAllUnscoredAttempts() {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'get-all-unscored-attempts' }, {}).toPromise();
+
+            if (res.error) {
+                throw new BadRequestException(res.error);
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getQuizAttempts(quizId: string, userId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'get-quiz-attempts' }, { quizId, userId }).toPromise();
+
+            if (res.error) {
+                throw new BadRequestException(res.error);
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async scoreAnswer(answerId: string, userId: string, score: number) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'score-answer' }, { answerId, userId, score }).toPromise();
+
+            if (res.error) {
+                if (res.error === 'answer-not-found') {
+                    throw new NotFoundException('Answer not found');
+                } else if (res.error === 'question-not-found') {
+                    throw new NotFoundException('Question not found');
+                } else if (res.error === 'quiz-not-found') {
+                    throw new NotFoundException('Quiz not found');
+                } else if (res.error === 'unauthorized') {
+                    throw new BadRequestException('Unauthorized');
+                } else if (res.error === 'not-essay-question') {
+                    throw new BadRequestException('Not an essay question');
+                } else if (res.error === 'score-too-high') {
+                    throw new BadRequestException('Score too high');
+                } else if (res.error === 'manual-scoring-not-needed') {
+                    throw new BadRequestException('Manual scoring not needed');
+                } else {
+                    throw new BadRequestException('Unable to score answer');
                 }
             }
             return res;
