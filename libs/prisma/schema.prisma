@@ -41,6 +41,10 @@ model Quiz {
 	authorId    String
 	leaderboard Boolean    @default(false)
 	timeLimit   Int?
+	passingScore Float?
+	randomize   Boolean    @default(false)
+	showResultsImmediately Boolean @default(false)
+	multipleAttempts Boolean @default(false)
 	createdAt   DateTime   @default(now())
 	updatedAt   DateTime   @updatedAt
 	expire 		Boolean?

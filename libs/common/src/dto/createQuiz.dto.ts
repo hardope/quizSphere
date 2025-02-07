@@ -13,12 +13,33 @@ export class CreateQuizDTO {
 
     @IsBoolean()
     @IsOptional()
+    @ApiProperty({ example: true})
     leaderboard?: boolean
 
     @IsNumber()
     @ApiProperty({ example: 10000 })
     @IsOptional()
     timeLimit?: number
+
+    @IsNumber()
+    @ApiProperty({ example: 70 })
+    @IsOptional()
+    passingScore?: number
+
+    @IsBoolean()
+    @IsOptional()
+    @ApiProperty({ example: true})
+    randomize?: boolean
+
+    @IsBoolean()
+    @IsOptional()
+    @ApiProperty({ example: true})
+    showResultsImmediately?: boolean
+
+    @IsBoolean()
+    @IsOptional()
+    @ApiProperty({ example: true})
+    multipleAttempts?: boolean
 
     @IsBoolean()
     @IsOptional()

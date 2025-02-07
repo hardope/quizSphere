@@ -21,6 +21,11 @@ export class QuizController {
 		return this.quizService.createQuiz(data);
 	}
 
+	@MessagePattern({ cmd: 'update-quiz' })
+	updateQuiz(@Payload() data: {data: CreateQuizDTO, authorId: string, quizId: string}) {
+		return this.quizService.updateQuiz(data.quizId, data.data, data.authorId);
+	}
+
 	@MessagePattern({ cmd: 'fetch-quizzes' })
 	fetchQuizzes() {
 		return this.quizService.fetchQuizzes();
@@ -46,6 +51,11 @@ export class QuizController {
 		return this.quizService.addQuestion(data.quizId, data.data, data.authorId);
 	}
 
+	@MessagePattern({ cmd: 'edit-question' })
+	editQuestion(data: { data: addQuestionDTO, authorId: string, questionId: string }) {
+		return this.quizService.editQuestion(data.questionId, data.data, data.authorId);
+	}
+
 	@MessagePattern({ cmd: 'remove-question' })
 	removeQuestion(data: { questionId: string, authorId: string }) {
 		return this.quizService.removeQuestion(data.questionId, data.authorId);
@@ -54,6 +64,11 @@ export class QuizController {
 	@MessagePattern({ cmd: 'add-option' })
 	addOption(data: { data: addOptionDTO, authorId: string, questionId: string }) {
 		return this.quizService.addOption(data.questionId, data.data, data.authorId);
+	}
+
+	@MessagePattern({ cmd: 'edit-option'})
+	editOption(data: { data: addOptionDTO, authorId: string, optionId: string }) {
+		return this.quizService.editOption(data.optionId, data.data, data.authorId);
 	}
 
 	@MessagePattern({ cmd: 'remove-option'})
@@ -97,8 +112,8 @@ export class QuizController {
 	}
 
 	@MessagePattern({ cmd: 'get-all-unscored-attempts' })
-	getAllUnscoredAttempts() {
-		return this.quizService.getAllUnscoredAttempts();
+	getAllUnscoredAttempts(data: { quizId: string, userId: string }) {
+		return this.quizService.getAllUnscoredAttemptsForQuiz(data.quizId, data.userId);
 	}
 
 	@MessagePattern({ cmd: 'get-quiz-attempts' })

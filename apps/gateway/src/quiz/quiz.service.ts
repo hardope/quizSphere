@@ -1,6 +1,7 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { addOptionDTO, addQuestionDTO, CreateQuizDTO, submitAnswerDTO } from '@app/common';
+import { UpdateQuizDTO } from '@app/common/dto/updateQuiz.dto';
 // import { error } from 'console';
 
 @Injectable()
@@ -22,6 +23,29 @@ export class QuizService {
             return res;
         } catch (error) {
             throw new Error(error.message);
+        }
+    }
+
+    async updateQuiz (data: {data: UpdateQuizDTO, authorId: string, quizId: string}) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'update-quiz'}, data).toPromise()
+
+            if (!res?.error) {
+                return res
+            }
+
+            if (res.error === 'not-found') {
+                throw new NotFoundException('Quiz Not Found')
+            } else if (res.error === 'unauthorized') {
+                throw new UnauthorizedException('You are not authorized to perform this action')
+            } else if (res.error === 'quiz-published') {
+                throw new BadRequestException('Quiz is already published')
+            }
+
+            throw new BadRequestException('Failed to update Quiz')
+        } catch (error) {
+            Logger.log(error.message, 'quizService')
+            throw new BadRequestException('failed')
         }
     }
 
@@ -115,6 +139,25 @@ export class QuizService {
         }
     }
 
+    async editQuestion (questionId: string, data: addQuestionDTO, authorId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'edit-question' }, { data, authorId, questionId }).toPromise();
+
+            if (res.error) {
+                if (res.error === 'not-found') {
+                    throw new NotFoundException('Question not found');
+                } else if (res.error === 'unauthorized') {
+                    throw new BadRequestException('Unauthorized');
+                } else {
+                    throw new BadRequestException('Unable to edit question');
+                }
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async removeQuestion (questionId: string, authorId: string) {
         try {
             const res = await this.quizMicroService.send({ cmd: 'remove-question' }, { questionId, authorId }).toPromise();
@@ -147,6 +190,23 @@ export class QuizService {
                     throw new BadRequestException('Quiz is published');
                 } else {
                     throw new BadRequestException('Unable to add option');
+                }
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async editOption (optionId: string, data: addOptionDTO, authorId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'edit-option' }, { data, authorId, optionId }).toPromise();
+
+            if (res.error) {
+                if (res.error === 'unauthorized') {
+                    throw new BadRequestException('Unauthorized');
+                } else {
+                    throw new BadRequestException('Unable to edit option');
                 }
             }
             return res;
@@ -323,9 +383,9 @@ export class QuizService {
         }
     }
 
-    async getAllUnscoredAttempts() {
+    async getAllUnscoredAttemptsForQuiz(quizId: string, userId: string) {
         try {
-            const res = await this.quizMicroService.send({ cmd: 'get-all-unscored-attempts' }, {}).toPromise();
+            const res = await this.quizMicroService.send({ cmd: 'get-all-unscored-attempts' }, {quizId, userId}).toPromise();
 
             if (res.error) {
                 throw new BadRequestException(res.error);

@@ -3,6 +3,7 @@ import { QuizService } from './quiz.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { addOptionDTO, addQuestionDTO, CreateQuizDTO, submitAnswerDTO } from '@app/common';
 import { JwtGuard } from '../auth/jwt/jwt.guard';
+import { UpdateQuizDTO } from '@app/common/dto/updateQuiz.dto';
 
 @Controller('quiz')
 @ApiTags('Quiz')
@@ -21,6 +22,14 @@ export class QuizController {
 	@ApiBearerAuth()
 	createQuiz(@Body() data: CreateQuizDTO, @Req() req) {
 		return this.quizService.createQuiz({ data, authorId: req.user.id });
+	}
+
+	@Patch(':id')
+	@ApiOperation({ summary: 'Update quiz'})
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	updateQuiz(@Param('id') id: string, @Body() data: UpdateQuizDTO, @Req() req) {
+		return this.quizService.updateQuiz({ data, authorId: req.user.id, quizId: id });
 	}
 
 	@Get(':id')
@@ -53,7 +62,15 @@ export class QuizController {
 		return this.quizService.addQuestion(id, data, req.user.id);
 	}
 
-	@Delete(':id/question/:questionId')
+	@Patch('question/:questionId')
+	@ApiOperation({ summary: 'Edit question in quiz' })
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	editQuestion(@Param('questionId') questionId: string, @Body() data: addQuestionDTO, @Req() req) {
+		return this.quizService.editQuestion(questionId, data, req.user.id);
+	}
+
+	@Delete('question/:questionId')
 	@ApiOperation({ summary: 'Remove question from quiz' })
 	@UseGuards(JwtGuard)
 	@ApiBearerAuth()
@@ -69,7 +86,15 @@ export class QuizController {
 		return this.quizService.addOption(questionId, data, req.user.id);
 	}
 
-	@Delete(':id/question/:questionId/option/:optionId')
+	@Patch('question/:questionId/option/:optionId')
+	@ApiOperation({ summary: 'Edit option in question' })
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	editOption(@Param('optionId') optionId: string, @Body() data: addOptionDTO, @Req() req) {
+		return this.quizService.editOption(optionId, data, req.user.id);
+	}
+
+	@Delete('question/:questionId/option/:optionId')
 	@ApiOperation({ summary: 'Remove option from question' })
 	@UseGuards(JwtGuard)
 	@ApiBearerAuth()
@@ -125,12 +150,12 @@ export class QuizController {
 		return this.quizService.getAllUserAttempts(req.user.id);
 	}
 
-	@Get('unscored/attempts')
+	@Get(':id/unscored/attempts')
 	@ApiOperation({ summary: 'Get all unscored attempts' })
 	@UseGuards(JwtGuard)
 	@ApiBearerAuth()
-	getAllUnscoredAttempts() {
-		return this.quizService.getAllUnscoredAttempts();
+	getAllUnscoredAttempts(@Param('id') id: string, @Req() req) {
+		return this.quizService.getAllUnscoredAttemptsForQuiz(id, req.user.id);
 	}
 
 	@Get('attempt/:attemptId')
@@ -149,11 +174,11 @@ export class QuizController {
 		return this.quizService.finishAttempt(attemptId, req.user.id);
 	}
 
-	@Patch('answer/:answerId/score')
-	@ApiOperation({ summary: 'Score an answer' })
-	@UseGuards(JwtGuard)
-	@ApiBearerAuth()
-	scoreAnswer(@Param('answerId') answerId: string, @Body('score') score: number, @Req() req) {
-		return this.quizService.scoreAnswer(answerId, req.user.id, score);
-	}
+	// @Patch('answer/:answerId/score')
+	// @ApiOperation({ summary: 'Score an answer' })
+	// @UseGuards(JwtGuard)
+	// @ApiBearerAuth()
+	// scoreAnswer(@Param('answerId') answerId: string, @Body('score') score: number, @Req() req) {
+	// 	return this.quizService.scoreAnswer(answerId, req.user.id, score);
+	// }
 }
