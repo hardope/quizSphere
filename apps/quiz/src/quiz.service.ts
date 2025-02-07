@@ -182,28 +182,6 @@ export class QuizService {
 		}
 	}
 
-	// async displayQuiz(quizId: string, userId: string) {
-	// 	try {
-	// 		const quiz = await this.viewQuiz(quizId);
-
-	// 		if (quiz.error) {
-	// 			return quiz;
-	// 		}
-
-	// 		const attempt = await this.prisma.attempt.findFirst({
-	// 			where: {
-	// 				quizId,
-	// 				userId
-	// 			}
-	// 		});
-	// 	} catch (error) {
-	// 		Logger.error(error, 'QuizService');
-	// 		return {
-	// 			error: 'failed'
-	// 		};
-	// 	}
-	// }
-
 	async deleteQuiz (id: string, authorId: string) {
 		Logger.log('Deleting quiz...', 'QuizService');
 		try {
@@ -260,7 +238,7 @@ export class QuizService {
 				};
 			}
 
-			if (data.type === 'Boolean' && (typeof data.booleanAnswer !== 'boolean' || data.booleanAnswer === null)) {
+			if (data.type === 'Boolean' && (typeof data.booleanAnswer !== 'boolean')) {
 				return {
 					error: 'boolean-answer-required'
 				};
@@ -272,7 +250,7 @@ export class QuizService {
 					text: data.text,
 					type: data.type,
 					points: data.points,
-					booleanAnswer: data.booleanAnswer !== undefined ? data.booleanAnswer : null
+					booleanAnswer: data.type === 'Boolean' ? data.booleanAnswer : null
 				}
 			});
 		} catch (error) {
@@ -352,7 +330,7 @@ export class QuizService {
 				};
 			}
 
-			if (data.type === 'Boolean' && !data.booleanAnswer) {
+			if (data.type === 'Boolean' && (typeof data.booleanAnswer !== 'boolean')) {
 				return {
 					error: 'boolean-answer-required'
 				};
@@ -364,7 +342,7 @@ export class QuizService {
 					text: data.text,
 					type: data.type,
 					points: data.points,
-					booleanAnswer: data.booleanAnswer || null
+					booleanAnswer: data.type === 'Boolean' ? data.booleanAnswer : null
 				}
 			});
 		} catch (error) {
@@ -634,13 +612,60 @@ export class QuizService {
 				}
 			});
 
-			const newDate = new Date()
-			const end =  new Date(newDate.getTime() + quiz.timeLimit * 1000)
+			const newDate = new Date();
+			const end = new Date(newDate.getTime() + quiz.timeLimit * 1000);
 
 			if (existingAttempt && existingAttempt.completed === false && newDate < end) {
+				// Attempt already exists and is in progress.
+				// Retrieve the quiz, its questions, and any selected answers.
+				const quizData = await this.prisma.quiz.findUnique({
+					where: { id: existingAttempt.quizId }
+				});
+				const questions = await this.prisma.question.findMany({
+					where: { quizId: quizData.id },
+					select: {
+						id: true,
+						text: true,
+						type: true,
+						points: true,
+					}
+				});
+				const questionsWithOptions = await Promise.all(questions.map(async (question) => {
+					const options = await this.prisma.option.findMany({
+						where: { questionId: question.id },
+						select: {
+							id: true,
+							text: true,
+						}
+					});
+					const answer = await this.prisma.answer.findFirst({
+						where: {
+							userId,
+							attemptId: existingAttempt.id,
+							questionId: question.id
+						},
+						select: {
+							optionId: true,
+							optionIds: true,
+							booleanAnswer: true,
+							textAnswer: true,
+							score: true
+						}
+					});
+					return {
+						...question,
+						options,
+						answer
+					};
+				}));
+
 				return {
-					error: 'attempt-in-progress',
-					attemptId: existingAttempt.id
+					message: 'attempt-in-progress',
+					attempt: {
+						...existingAttempt,
+						quiz: quizData,
+						questions: questionsWithOptions
+					}
 				};
 			} else if ((existingAttempt && existingAttempt.completed === true) || newDate > end) {
 				await this.prisma.attempt.update({
@@ -742,10 +767,10 @@ export class QuizService {
 			}));
 
 			const manualScoringNeeded = await this.checkIfManualScoringNeeded(attemptId);
-			const end = new Date(attempt.startTime.getTime() + quiz.timeLimit * 1000)
-			const now = new Date()
+			const end = new Date(attempt.startTime.getTime() + quiz.timeLimit * 1000);
+			const now = new Date();
 
-			if (!manualScoringNeeded && now > end) {
+			if (!manualScoringNeeded && now > end && !attempt.completed) {
 				await this.prisma.attempt.update({
 					where: { id: attemptId },
 					data: {
@@ -754,6 +779,13 @@ export class QuizService {
 				});
 				await this.scoreQuiz(attemptId);
 			}
+
+			return {
+				attempt,
+				quiz,
+				questions: questionsWithOptions,
+				manualScoringNeeded
+			};
 
 		} catch (error) {
 			Logger.error(error, 'QuizService');
@@ -806,7 +838,7 @@ export class QuizService {
 			if (attempt.completed) {
 				return {
 					error: 'quiz-completed'
-				}
+				};
 			}
 
 			if (question.quizId !== attempt.quizId) {
@@ -1147,12 +1179,6 @@ export class QuizService {
 				};
 			}
 
-			const manualScoringNeeded = await this.checkIfManualScoringNeeded(attemptId);
-			if (manualScoringNeeded) {
-				console.log("Manual Scoring Required")
-				return;
-			}
-
 			const answers = await this.prisma.answer.findMany({
 				where: { attemptId }
 			});
@@ -1224,20 +1250,25 @@ export class QuizService {
 		}
 	}
 
-	private async checkIfManualScoringNeeded(attemptId: string) {
+	private async checkIfManualScoringNeeded(attemptId: string) : Promise<boolean> {
 		Logger.log('Checking if manual scoring needed...', 'QuizService');
 		try {
 			const answers = await this.prisma.answer.findMany({
 				where: {
 					attemptId,
-					score: null,
-					optionId: null,
-					optionIds: null,
-					booleanAnswer: null,
-				},
+					score: null
+				}
 			});
-
-			return answers.length > 0;
+			// For each answer that lacks a score, perform a separate lookup for its question.
+			for (const answer of answers) {
+				const question = await this.prisma.question.findUnique({
+					where: { id: answer.questionId }
+				});
+				if (question && question.type === 'Essay') {
+					return true;
+				}
+			}
+			return false;
 		} catch (error) {
 			Logger.error(error, 'QuizService');
 			return false;
