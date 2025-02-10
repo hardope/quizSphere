@@ -1,0 +1,34 @@
+{
+
+    "apps": [{
+
+        "name" : "gateway",
+        "script" : "node ./dist/apps/gateway/main.js",
+        "log_file": "gateway.log"
+    },
+    {
+
+        "name" : "authentication",
+        "script" : "node ./dist/apps/authentication/main.js",
+        "log_file": "authentication.log"
+    },
+    {
+
+        "name" : "notification",
+        "script" : "node ./dist/apps/notification/main.js",
+        "log_file": "notification.log"
+    },
+    {
+
+        "name" : "quiz",
+        "script" : "node ./dist/apps/quiz/main.js",
+        "log_file": "quiz.log"
+    },
+    {
+
+        "name" : "user",
+        "script" : "node ./dist/apps/user/main.js",
+        "log_file": "user.log"
+    }
+    ]
+}
