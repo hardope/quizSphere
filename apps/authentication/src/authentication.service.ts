@@ -47,6 +47,34 @@ constructor (
 		}
 	}
 
+	async refreshToken (token: string) {
+		try {
+			const decoded = this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+			if (decoded.type === 'refresh') {
+				const user = await this.prisma.user.findUnique({
+					where: {
+						id: decoded.id
+					}
+				});
+
+				if (user) {
+					const { password, ...result } = user;
+					Logger.log(`Authorized User ${user.email}`, 'AuthService - refreshToken');
+					return{
+						user: result,
+						accessToken: this.jwtService.sign({...result, type: 'access'}, {expiresIn: process.env.JWT_ACCESS_EXPIRATION, secret: process.env.JWT_SECRET}),
+						// refreshToken: this.jwtService.sign({...result, type: 'refresh'}, {expiresIn: process.env.JWT_REFRESH_EXPIRATION, secret: process.env.JWT_SECRET}),
+						status: true
+					}
+				}
+			}
+			return null;
+		} catch (error) {
+			Logger.error(error, 'AuthService - refreshToken');
+			return null;
+		}
+	}
+
 	async validateEmail(email: string, token: string) {
 		// console.log(email, token)
 		try {

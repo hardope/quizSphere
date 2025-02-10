@@ -14,6 +14,18 @@ export class QuizService {
         this.quizMicroService.emit('echo', {})
     }
 
+    async dashboard (userId) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'dashboard' }, { userId }).toPromise();
+            if (res.error) {
+                throw new BadRequestException(res.error);
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async createQuiz (data: { data: CreateQuizDTO, authorId: string }) {
         try {
             const res = await this.quizMicroService.send({ cmd: 'create-quiz' }, data).toPromise();

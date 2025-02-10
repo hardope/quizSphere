@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { AuthDTO } from '@app/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PasswordResetDto } from './dto/password-reset.dto';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -13,6 +14,13 @@ export class AuthController {
 	@ApiOperation({ summary: 'Authenticate a user' })
 	handleAuth(@Body() data: AuthDTO) {
 		return this.authService.handleAuth(data);
+	}
+
+	@Post('refresh-token/')
+	@ApiOperation({ summary: 'Refresh token' })
+	refreshToken(@Body() data: RefreshTokenDto) {
+		console.log(data)
+		return this.authService.refreshToken(data.token);
 	}
 
 	@Post('validate-email/:email/:token')

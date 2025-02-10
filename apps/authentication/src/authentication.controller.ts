@@ -17,6 +17,11 @@ export class AuthenticationController {
 		return this.authService.validateUser(data.email, data.password);
 	}
 
+	@MessagePattern({ cmd: 'refreshToken' })
+	refreshToken(@Payload() data: {token: string}) {
+		return this.authService.refreshToken(data.token);
+	}
+
 	@MessagePattern({ cmd: 'validateEmail' })
 	validateEmail(@Payload() data: { email: string; token: string }) {
 		return this.authService.validateEmail(data.email, data.token);

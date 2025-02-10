@@ -15,6 +15,54 @@ export class QuizService {
 		return 'Echo!';
 	}
 
+	async dashboard (userId: string) {
+		Logger.log('Fetching dashboard...', 'QuizService');
+		try {
+			const createdQuizesCount = await this.prisma.quiz.count({
+				where: { authorId: userId }
+			});
+
+			const recentCreatedQuizzes = await this.prisma.quiz.findMany({
+				where: { authorId: userId },
+				orderBy: {
+					createdAt: 'desc'
+				},
+				take: 2
+			});
+
+			const recentCreatedQuizzesWithQuestionCount = await Promise.all(recentCreatedQuizzes.map(async (quiz) => {
+				const questionCount = await this.prisma.question.count({
+					where: { quizId: quiz.id }
+				});
+				return {
+					...quiz,
+					questionCount
+				};
+			}));
+
+			const allAttemptCount = await this.prisma.attempt.count({
+				where: { userId }
+			});
+
+			const recentAttempts = await this.prisma.attempt.findMany({
+				where: { userId },
+				orderBy: {
+					createdAt: 'desc'
+				},
+				take: 2
+			});
+
+			return {
+				createdQuizesCount,
+				recentCreatedQuizzesWithQuestionCount,
+				allAttemptCount,
+				recentAttempts
+			};
+		} catch (error) {
+			Logger.log(error, 'QuizService');
+		}
+	}
+
 	async createQuiz (data:{data: CreateQuizDTO, authorId: string}) {
 		Logger.log('Creating quiz...', 'QuizService');
 		try {
