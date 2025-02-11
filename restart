@@ -9,5 +9,6 @@ nvm use default
 cd /home/hardope/quizSphere
 git pull
 npm install
+npm run build
 npx prisma migrate deploy
 pm2 restart all
