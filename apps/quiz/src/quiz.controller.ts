@@ -16,6 +16,11 @@ export class QuizController {
   		return this.quizService.echo();
   	}
 
+	@MessagePattern({ cmd: 'dashboard'})
+	dashboard(data: { userId: string }) {
+		return this.quizService.dashboard(data.userId);
+	}
+
 	@MessagePattern({ cmd: 'create-quiz' })
 	createQuiz(@Payload() data: {data: CreateQuizDTO, authorId: string}) {
 		return this.quizService.createQuiz(data);

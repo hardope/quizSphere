@@ -24,6 +24,20 @@ export class AuthService {
 		}
 	}
 
+	async refreshToken(token: string) {
+		try {
+			console.log(token)
+			const res = await this.authService.send({cmd: 'refreshToken'}, {token}).toPromise();
+			if (res) {
+				return res;
+			}
+			throw new BadRequestException("Invalid token");
+		} catch (error) {
+			Logger.error(error, 'AuthService - refreshToken');
+			throw error;
+		}
+	}
+
 	async validateEmail(data: { email: string; token: string }) {
 		try {
 			const res = await this.authService.send({cmd: 'validateEmail'}, data).toPromise();
