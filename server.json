@@ -3,31 +3,31 @@
     "apps": [{
 
         "name" : "gateway",
-        "script" : "npm run start gateway",
+        "script" : "node ./dist/apps/gateway/main.js",
         "log_file": "gateway.log"
     },
     {
 
         "name" : "authentication",
-        "script" : "npm run start authentication",
+        "script" : "node ./dist/apps/authentication/main.js",
         "log_file": "authentication.log"
     },
     {
 
         "name" : "notification",
-        "script" : "npm run start notification",
+        "script" : "node ./dist/apps/notification/main.js",
         "log_file": "notification.log"
     },
     {
 
         "name" : "quiz",
-        "script" : "npm run start quiz",
+        "script" : "node ./dist/apps/quiz/main.js",
         "log_file": "quiz.log"
     },
     {
 
         "name" : "user",
-        "script" : "npm run start user",
+        "script" : "node ./dist/apps/user/main.js",
         "log_file": "user.log"
     }
     ]

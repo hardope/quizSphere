@@ -10,5 +10,9 @@ cd /home/hardope/quizSphere
 git pull
 npm install
 npm run build
+npm run build authentication
+npm run build notification
+npm run build quiz
+npm run build user
 npx prisma migrate deploy
 pm2 restart all
