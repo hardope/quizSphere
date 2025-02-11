@@ -23,7 +23,4 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          cd /home/hardope/quizSphere
-          git pull origin master
-          npm run build
-          pm2 restart all
+          bash /home/hardope/quizSphere/restart

@@ -1,0 +1,5 @@
+cd /home/hardope/quizSphere
+git pull
+npm install
+npx prisma migrate deploy
+pm2 restart all
