@@ -45,7 +45,7 @@ export class QuizService {
 			});
 
 			const recentAttempts = await this.prisma.attempt.findMany({
-				where: { userId },
+				where: { userId, completed: true },
 				orderBy: {
 					createdAt: 'desc'
 				},
