@@ -54,7 +54,7 @@ export class QuizService {
 
 			return {
 				createdQuizesCount,
-				recentCreatedQuizzesWithQuestionCount,
+				recentQuizzes: recentCreatedQuizzesWithQuestionCount,
 				allAttemptCount,
 				recentAttempts
 			};
