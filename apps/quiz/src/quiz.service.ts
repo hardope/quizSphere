@@ -148,7 +148,11 @@ export class QuizService {
 	async fetchQuizzes () {
 		Logger.log('Fetching quizzes...', 'QuizService');
 		try {
-			const quizes = await this.prisma.quiz.findMany();
+			const quizes = await this.prisma.quiz.findMany({
+				where: {
+					published: true
+				}
+			});
 			const quizzesWithQuestionCount = await Promise.all(quizes.map(async (quiz) => {
 				const questionCount = await this.prisma.question.count({
 					where: { quizId: quiz.id }
