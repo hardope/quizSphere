@@ -1102,12 +1102,12 @@ export class QuizService {
 		}
 	}
 
-	async getAllUserAttempts (userId: string) {
+	async getAllUserAttempts(userId: string) {
 		try {
 			const attempts = await this.prisma.attempt.findMany({
 				where: { userId }
 			});
-
+	
 			const attemptsWithQuiz = await Promise.all(attempts.map(async (attempt) => {
 				const quiz = await this.prisma.quiz.findUnique({
 					where: { id: attempt.quizId }
@@ -1117,8 +1117,8 @@ export class QuizService {
 					quiz
 				};
 			}));
-
-			return attempts;
+	
+			return attemptsWithQuiz;
 		} catch (error) {
 			Logger.error(error, 'QuizService');
 			return {
