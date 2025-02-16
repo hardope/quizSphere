@@ -73,6 +73,18 @@ export class QuizService {
         }
     }
 
+    async fetchUserQuizzes (userId: string) {
+        try {
+            const res = await this.quizMicroService.send({ cmd: 'fetch-user-quizzes' }, { userId }).toPromise();
+            if (res.error) {
+                throw new BadRequestException(res.error);
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async viewQuiz (id: string) {
         try {
             const res = await this.quizMicroService.send({ cmd: 'view-quiz' }, { id }).toPromise();

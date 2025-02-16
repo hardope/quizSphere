@@ -171,6 +171,35 @@ export class QuizService {
 		}
 	}
 
+	async fetchUserQuizzes(userId: string) {
+		Logger.log('Fetching quizzes for user...', 'QuizService');
+		try {
+			const quizzes = await this.prisma.quiz.findMany({
+				where: {
+					authorId: userId
+				}
+			});
+
+			const quizzesWithQuestionCount = await Promise.all(quizzes.map(async (quiz) => {
+				const questionCount = await this.prisma.question.count({
+					where: { quizId: quiz.id }
+				});
+				return {
+					...quiz,
+					questionCount
+				};
+			})
+			);
+
+			return quizzesWithQuestionCount;
+		} catch (error) {
+			Logger.error(error, 'QuizService');
+			return {
+				error: 'Failed to fetch quizzes'
+			}
+		}
+	}
+
 	async fetchQuizById (id: string, userId: string) {
 		Logger.log('Fetching quiz by id...', 'QuizService');
 		try {

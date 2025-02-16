@@ -16,6 +16,14 @@ export class QuizController {
 		return this.quizService.fetchQuizzes();
 	}
 
+	@Get('user')
+	@ApiOperation({ summary: 'Fetch all created quizzes for user' })
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	fetchUserQuizzes(@Req() req) {
+		return this.quizService.fetchUserQuizzes(req.user.id);
+	}
+
 	@Get('dashboard')
 	@ApiOperation({ summary: 'Get dashboard for user'})
 	@UseGuards(JwtGuard)

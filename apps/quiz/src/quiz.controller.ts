@@ -36,6 +36,11 @@ export class QuizController {
 		return this.quizService.fetchQuizzes();
 	}
 
+	@MessagePattern({ cmd: 'fetch-user-quizzes' })
+	fetchUserQuizzes(data: { userId: string }) {
+		return this.quizService.fetchUserQuizzes(data.userId);
+	}
+
 	@MessagePattern({ cmd: 'fetch-quiz-by-id' })
 	fetchQuizById(data: { id: string, userId: string }) {
 		return this.quizService.fetchQuizById(data.id, data.userId);
