@@ -52,6 +52,21 @@ export class QuizService {
 				take: 2
 			});
 
+			const recentAttemptsWithQuiz = await Promise.all(recentAttempts.map(async (attempt) => {
+				const quiz = await this.prisma.quiz.findUnique({
+					where: { id: attempt.quizId }
+				});
+				const answers = await this.prisma.answer.findMany({
+					where: { attemptId: attempt.id }
+				});
+				const totalScore = answers.reduce((sum, answer) => sum + (answer.score || 0), 0);
+				return {
+					...attempt,
+					quiz,
+					totalScore
+				};
+			}));
+
 			return {
 				createdQuizesCount,
 				recentQuizzes: recentCreatedQuizzesWithQuestionCount,
