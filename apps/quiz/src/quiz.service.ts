@@ -56,14 +56,15 @@ export class QuizService {
 				const quiz = await this.prisma.quiz.findUnique({
 					where: { id: attempt.quizId }
 				});
-				const answers = await this.prisma.answer.findMany({
-					where: { attemptId: attempt.id }
+
+				const quizQuestions = await this.prisma.question.findMany({
+					where: { quizId: quiz.id }
 				});
-				const totalScore = answers.reduce((sum, answer) => sum + (answer.score || 0), 0);
+				const quizTotalScore = quizQuestions.reduce((sum, question) => sum + question.points, 0);
 				return {
 					...attempt,
 					quiz,
-					totalScore
+					totalScore: quizTotalScore
 				};
 			}));
 
