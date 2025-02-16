@@ -71,7 +71,7 @@ export class QuizService {
 				createdQuizesCount,
 				recentQuizzes: recentCreatedQuizzesWithQuestionCount,
 				allAttemptCount,
-				recentAttempts
+				recentAttempts: recentAttemptsWithQuiz
 			};
 		} catch (error) {
 			Logger.log(error, 'QuizService');
