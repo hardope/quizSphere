@@ -340,7 +340,6 @@ export class QuizService {
 					error: 'boolean-answer-required'
 				};
 			}
-			console.log(data)
 			return await this.prisma.question.create({
 				data: {
 					quizId,
@@ -586,9 +585,8 @@ export class QuizService {
 					error: 'not-found'
 				};
 			}
-			console.log('here')
+
 			if (quiz.authorId !== authorId) {
-				console.log('unauth')
 				return {
 					error: 'unauthorized'
 				};
@@ -1033,7 +1031,6 @@ export class QuizService {
 					}
 				});
 
-				console.log(answer)
 
 			} else {
 				const answer = await this.prisma.answer.create({
@@ -1045,7 +1042,6 @@ export class QuizService {
 					}
 				});
 
-				console.log(answer)
 			}
 
 			return {
@@ -1112,9 +1108,16 @@ export class QuizService {
 				const quiz = await this.prisma.quiz.findUnique({
 					where: { id: attempt.quizId }
 				});
+
+				const questions = await this.prisma.question.findMany({
+					where: { quizId: quiz.id }
+				});
+				const totalScore = questions.reduce((sum, question) => sum + question.points, 0);
+
 				return {
 					...attempt,
-					quiz
+					quiz,
+					totalScore
 				};
 			}));
 	

@@ -32,6 +32,14 @@ export class QuizController {
 		return this.quizService.dashboard(req.user.id);
 	}
 
+	@Get('get-user-attempt')
+	@ApiOperation({ summary: 'Get all attempts by a user' })
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	getAllUserAttempts(@Req() req) {
+		return this.quizService.getAllUserAttempts(req.user.id);
+	}
+
 	@Post()
 	@ApiOperation({ summary: 'Create a quiz' })
 	@UseGuards(JwtGuard)
@@ -156,14 +164,6 @@ export class QuizController {
 	@ApiBearerAuth()
 	getQuizAttempts(@Param('id') id: string, @Req() req) {
 		return this.quizService.getQuizAttempts(id, req.user.id);
-	}
-
-	@Get('user/attempts')
-	@ApiOperation({ summary: 'Get all attempts by a user' })
-	@UseGuards(JwtGuard)
-	@ApiBearerAuth()
-	getAllUserAttempts(@Req() req) {
-		return this.quizService.getAllUserAttempts(req.user.id);
 	}
 
 	@Get(':id/unscored/attempts')
