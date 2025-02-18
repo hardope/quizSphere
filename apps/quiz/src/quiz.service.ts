@@ -816,7 +816,7 @@ export class QuizService {
 			}));
 
 			return {
-				attempt: newQuizAttempt,
+				...newQuizAttempt,
 				quiz: quizData,
 				questions: questionsWithOptions
 			};
