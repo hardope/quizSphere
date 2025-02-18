@@ -816,9 +816,12 @@ export class QuizService {
 			}));
 
 			return {
-				...newQuizAttempt,
-				quiz: quizData,
-				questions: questionsWithOptions
+				"message": "attempt-created",
+				attempt: {
+					...newQuizAttempt,
+					quiz: quizData,
+					questions: questionsWithOptions
+				}
 			};
 
 		} catch (error) {

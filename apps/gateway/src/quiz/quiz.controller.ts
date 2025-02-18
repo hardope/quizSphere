@@ -150,7 +150,7 @@ export class QuizController {
 		return this.quizService.attemptQuiz(id, req.user.id);
 	}
 
-	@Patch(':id/submit/:attemptId/:questionId')
+	@Patch('/submit/:attemptId/:questionId')
 	@ApiOperation({ summary: 'Submit answer to question' })
 	@UseGuards(JwtGuard)
 	@ApiBearerAuth()
