@@ -777,7 +777,7 @@ export class QuizService {
 				}
 			}
 
-			return await this.prisma.attempt.create({
+			const newQuizAttempt = await this.prisma.attempt.create({
 				data: {
 					quizId,
 					userId,
@@ -786,6 +786,40 @@ export class QuizService {
 					isScored: false
 				}
 			});
+
+			const quizData = await this.prisma.quiz.findUnique({
+				where: { id: newQuizAttempt.quizId }
+			});
+
+			const questions = await this.prisma.question.findMany({
+				where: { quizId: quizData.id },
+				select: {
+					id: true,
+					text: true,
+					type: true,
+					points: true,
+				}
+			});
+
+			const questionsWithOptions = await Promise.all(questions.map(async (question) => {
+				const options = await this.prisma.option.findMany({
+					where: { questionId: question.id },
+					select: {
+						id: true,
+						text: true,
+					}
+				});
+				return {
+					...question,
+					options
+				};
+			}));
+
+			return {
+				attempt: newQuizAttempt,
+				quiz: quizData,
+				questions: questionsWithOptions
+			};
 
 		} catch (error) {
 			Logger.log(error, 'QuizService');
