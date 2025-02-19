@@ -45,7 +45,7 @@ export class QuizService {
 			});
 
 			const recentAttempts = await this.prisma.attempt.findMany({
-				where: { userId, completed: true },
+				where: { userId, completed: true, isScored: true },
 				orderBy: {
 					createdAt: 'desc'
 				},
@@ -1113,7 +1113,8 @@ export class QuizService {
 			await this.prisma.attempt.update({
 				where: { id: attemptId },
 				data: {
-					completed: true
+					completed: true,
+					endTime: new Date()
 				}
 			});
 
