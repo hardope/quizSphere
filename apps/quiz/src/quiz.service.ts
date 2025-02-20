@@ -1357,7 +1357,9 @@ export class QuizService {
 						});
 
 						if (answer.optionId) {
+							console.log(answer, answer.optionId)
 							const isCorrect = correctOptions.some(option => option.id === answer.optionId);
+							console.log(isCorrect)
 							answerScore = isCorrect ? question.points : 0;
 						} else if (answer.optionIds) {
 							const correctOptionIds = correctOptions.map(option => option.id);

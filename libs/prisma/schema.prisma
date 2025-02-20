@@ -58,7 +58,7 @@ model Question {
 	quizId    String
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
-	points	  Float?
+	points	  Float?   @default(1)
 	booleanAnswer Boolean?
 	type	  QuestionType
 }
