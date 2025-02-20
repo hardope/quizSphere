@@ -28,7 +28,7 @@ export class MailService {
             },
         });
 
-        const verificationLink = `http://localhost/verify-user/${verification.token}`;
+        const verificationLink = `${process.env.FRONTEND_HOST}/verify-account/${user.email}/${verification.token}`;
 
         const subject = 'Welcome to ClickViral';
         const text = `Hello ${user.firstName},\n\nWelcome to ClickViral. Please click on the link below to verify your account:\n\n${verificationLink}\n\nIf you did not create an account, no further action is required.\nThis Link will expire in 5 minutes\n\nBest regards,\nThe ClickViral Team`;
