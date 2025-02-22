@@ -834,7 +834,22 @@ export class QuizService {
 		Logger.log('Viewing attempt...', 'QuizService');
 		try {
 			const attempt = await this.prisma.attempt.findUnique({
-				where: { id: attemptId }
+				where: {
+					id: attemptId
+				},
+				include: {
+					quiz: true,
+					Answer: {
+						include: {
+							question: {
+								include: {
+									Option: true
+								}
+							},
+							option: true
+						}
+					}
+				}
 			});
 
 			if (!attempt) {
@@ -849,57 +864,8 @@ export class QuizService {
 				};
 			}
 
-			const quiz = await this.prisma.quiz.findUnique({
-				where: { id: attempt.quizId }
-			});
-
-			if (!quiz) {
-				return {
-					error: 'quiz-not-found'
-				};
-			}
-
-			const questions = await this.prisma.question.findMany({
-				where: { quizId: quiz.id },
-				select: {
-					id: true,
-					text: true,
-					type: true,
-					points: true,
-				}
-			});
-
-			const questionsWithOptions = await Promise.all(questions.map(async (question) => {
-				const options = await this.prisma.option.findMany({
-					where: { questionId: question.id },
-					select: {
-						id: true,
-						text: true,
-					}
-				});
-				const answer = await this.prisma.answer.findFirst({
-					where: {
-						userId,
-						attemptId,
-						questionId: question.id
-					},
-					select: {
-						optionId: true,
-						optionIds: true,
-						booleanAnswer: true,
-						textAnswer: true,
-						score: true
-					}
-				});
-				return {
-					...question,
-					options,
-					answer
-				};
-			}));
-
 			const manualScoringNeeded = await this.checkIfManualScoringNeeded(attemptId);
-			const end = new Date(attempt.startTime.getTime() + quiz.timeLimit * 1000);
+			const end = new Date(attempt.startTime.getTime() + attempt.quiz.timeLimit * 1000);
 			const now = new Date();
 
 			if (!manualScoringNeeded && now > end && !attempt.completed) {
@@ -913,9 +879,42 @@ export class QuizService {
 			}
 
 			return {
-				attempt,
-				quiz,
-				questions: questionsWithOptions,
+				attempt: {
+					id: attempt.id,
+					startTime: attempt.startTime,
+					endTime: attempt.endTime,
+					completed: attempt.completed,
+					score: attempt.score,
+					isScored: attempt.isScored
+				},
+				quiz: {
+					id: attempt.quiz.id,
+					title: attempt.quiz.title,
+					description: attempt.quiz.description,
+					timeLimit: attempt.quiz.timeLimit
+				},
+				questions: attempt.Answer.map(answer => ({
+					id: answer.question.id,
+					text: answer.question.text,
+					type: answer.question.type,
+					points: answer.question.points,
+					options: answer.question.Option.map(option => ({
+						id: option.id,
+						text: option.text,
+						isCorrect: option.isCorrect
+					})),
+					answer: {
+						optionId: answer.optionId,
+						optionIds: answer.optionIds,
+						booleanAnswer: answer.booleanAnswer,
+						textAnswer: answer.textAnswer,
+						score: answer.score,
+						selectedOption: answer.option ? {
+							id: answer.option.id,
+							text: answer.option.text
+						} : null
+					}
+				})),
 				manualScoringNeeded
 			};
 
@@ -1139,25 +1138,24 @@ export class QuizService {
 	async getAllUserAttempts(userId: string) {
 		try {
 			const attempts = await this.prisma.attempt.findMany({
-				where: { userId }
+				where: { userId },
+				include: {
+					quiz: true,
+					Answer: {
+						include: {
+							question: true
+						}
+					}
+				}
 			});
 	
-			const attemptsWithQuiz = await Promise.all(attempts.map(async (attempt) => {
-				const quiz = await this.prisma.quiz.findUnique({
-					where: { id: attempt.quizId }
-				});
-
-				const questions = await this.prisma.question.findMany({
-					where: { quizId: quiz.id }
-				});
-				const totalScore = questions.reduce((sum, question) => sum + question.points, 0);
-
+			const attemptsWithQuiz = attempts.map(attempt => {
+				const totalScore = attempt.Answer.reduce((sum, answer) => sum + (answer.question.points || 0), 0);
 				return {
 					...attempt,
-					quiz,
 					totalScore
 				};
-			}));
+			});
 	
 			return attemptsWithQuiz;
 		} catch (error) {
@@ -1381,13 +1379,28 @@ export class QuizService {
 				}
 			}
 
-			await this.prisma.attempt.update({
-				where: { id: attemptId },
-				data: {
-					score: totalScore,
-					isScored: allScored
-				}
-			});
+			if (!attempt.endTime) {
+				await this.prisma.attempt.update({
+					where: { id: attemptId },
+					data: {
+						completed: true,
+						endTime: new Date(),
+						score: totalScore,
+						isScored: allScored
+					}
+				});
+			} else {
+
+				await this.prisma.attempt.update({
+					where: { id: attemptId },
+					data: {
+						score: totalScore,
+						isScored: allScored
+					}
+				});
+			}
+
+
 
 			return {
 				scored: true

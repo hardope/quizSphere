@@ -5,107 +5,133 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  	provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-	provider = "postgresql"
-	url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-	id        String   @id @default(cuid())
-	email     String   @unique
-	firstName String?
-	lastName  String?	
-	password  String   
-	createdAt DateTime @default(now())
-	updatedAt DateTime @updatedAt
-	isEmailVerified Boolean @default(false)
+  id                String              @id @default(cuid())
+  email             String              @unique
+  firstName         String?
+  lastName          String?
+  password          String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  isEmailVerified   Boolean             @default(false)
+  VerificationToken VerificationToken[]
+  Quiz              Quiz[]
+  Answer            Answer[]
+  Attempt           Attempt[]
 }
 
 model VerificationToken {
-	id        Int	   @id @default(autoincrement())
-	userId    String
-	token     String   @unique @default(uuid())
-	type      TokenType @default(EmailVerification)
-	utilized  Boolean  @default(false)
-	createdAt DateTime @default(now())
-	updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  userId    String
+  token     String    @unique @default(uuid())
+  type      TokenType @default(EmailVerification)
+  utilized  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Quiz {
-	id          String     @id @default(cuid())
-	title       String
-	description String?
-	authorId    String
-	leaderboard Boolean    @default(false)
-	timeLimit   Int?
-	passingScore Float?
-	randomize   Boolean    @default(false)
-	showResultsImmediately Boolean @default(false)
-	multipleAttempts Boolean @default(false)
-	createdAt   DateTime   @default(now())
-	updatedAt   DateTime   @updatedAt
-	expire 		Boolean?
-	expiresAt   DateTime?
-	published   Boolean    @default(false)
+  id                     String    @id @default(cuid())
+  title                  String
+  description            String?
+  authorId               String
+  leaderboard            Boolean   @default(false)
+  timeLimit              Int?
+  passingScore           Float?
+  randomize              Boolean   @default(false)
+  showResultsImmediately Boolean   @default(false)
+  multipleAttempts       Boolean   @default(false)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  expire                 Boolean?
+  expiresAt              DateTime?
+  published              Boolean   @default(false)
+
+  author   User       @relation(fields: [authorId], references: [id])
+  Question Question[]
+  Attempt  Attempt[]
 }
 
 model Question {
-	id        String   @id @default(cuid())
-	text      String
-	quizId    String
-	createdAt DateTime @default(now())
-	updatedAt DateTime @updatedAt
-	points	  Float?   @default(1)
-	booleanAnswer Boolean?
-	type	  QuestionType
+  id            String       @id @default(cuid())
+  text          String
+  quizId        String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  points        Float?       @default(1)
+  booleanAnswer Boolean?
+  type          QuestionType
+
+  quiz   Quiz     @relation(fields: [quizId], references: [id])
+  Option Option[]
+  Answer Answer[]
 }
 
 model Option {
-	id         String   @id @default(cuid())
-	text       String
-	isCorrect  Boolean  @default(false)
-	questionId String
-	createdAt  DateTime @default(now())
-	updatedAt  DateTime @updatedAt
+  id         String   @id @default(cuid())
+  text       String
+  isCorrect  Boolean  @default(false)
+  questionId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  question Question @relation(fields: [questionId], references: [id])
+  Answer   Answer[]
 }
 
 model Answer {
-	id         String   @id @default(cuid())
-	attemptId  String
-	userId     String
-	questionId String
-	optionIds  String[] @default([])
-	optionId   String?
-	textAnswer String?
-	booleanAnswer Boolean?
-	score	   Float?
-	createdAt  DateTime @default(now())
-	updatedAt  DateTime @updatedAt
+  id            String   @id @default(cuid())
+  attemptId     String
+  userId        String
+  questionId    String
+  optionIds     String[] @default([])
+  optionId      String?
+  textAnswer    String?
+  booleanAnswer Boolean?
+  score         Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  attempt  Attempt  @relation(fields: [attemptId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  question Question @relation(fields: [questionId], references: [id])
+  option   Option?  @relation(fields: [optionId], references: [id])
 }
 
 model Attempt {
-	id          String      @id @default(cuid())
-	userId      String      
-	quizId      String
-	startTime   DateTime   @default(now())
-	endTime     DateTime?
-	isScored	Boolean     @default(false)
-	score       Float?
-	completed   Boolean     @default(false)
-	createdAt   DateTime    @default(now())
-	updatedAt   DateTime    @updatedAt
+  id        String    @id @default(cuid())
+  userId    String
+  quizId    String
+  startTime DateTime  @default(now())
+  endTime   DateTime?
+  isScored  Boolean   @default(false)
+  score     Float?
+  completed Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user   User     @relation(fields: [userId], references: [id])
+  quiz   Quiz     @relation(fields: [quizId], references: [id])
+  Answer Answer[]
 }
 
 enum QuestionType {
-	MultiChoice
-	Essay
-	Boolean
+  MultiChoice
+  Essay
+  Boolean
 }
 
 enum TokenType {
-	EmailVerification
-	PasswordReset
+  EmailVerification
+  PasswordReset
 }
