@@ -15,70 +15,68 @@ export class QuizService {
 		return 'Echo!';
 	}
 
-	async dashboard (userId: string) {
+	async dashboard(userId: string) {
 		Logger.log('Fetching dashboard...', 'QuizService');
 		try {
-			const createdQuizesCount = await this.prisma.quiz.count({
-				where: { authorId: userId }
-			});
-
-			const recentCreatedQuizzes = await this.prisma.quiz.findMany({
-				where: { authorId: userId },
-				orderBy: {
-					createdAt: 'desc'
-				},
-				take: 2
-			});
-
-			const recentCreatedQuizzesWithQuestionCount = await Promise.all(recentCreatedQuizzes.map(async (quiz) => {
-				const questionCount = await this.prisma.question.count({
-					where: { quizId: quiz.id }
-				});
-				return {
-					...quiz,
-					questionCount
-				};
+			const [createdQuizzesCount, recentCreatedQuizzes, allAttemptCount, recentAttempts] = await Promise.all([
+				this.prisma.quiz.count({
+					where: { authorId: userId }
+				}),
+			
+				this.prisma.quiz.findMany({
+					where: { authorId: userId },
+					orderBy: { createdAt: 'desc' },
+					take: 2,
+					include: {
+					_count: {
+						select: { Question: true }
+					}
+					}
+				}),
+			
+				this.prisma.attempt.count({
+					where: { userId }
+				}),
+			
+				this.prisma.attempt.findMany({
+					where: { userId, completed: true, isScored: true },
+					orderBy: { createdAt: 'desc' },
+					take: 2,
+					include: {
+					quiz: {
+						select: {
+						id: true,
+						title: true,
+						Question: {
+							select: { points: true }
+						}
+						}
+					}
+					}
+				})
+			]);
+		
+			// Calculate total scores for quizzes in attempts
+			const recentAttemptsWithQuiz = recentAttempts.map(attempt => ({
+				...attempt,
+				totalScore: attempt.quiz.Question.reduce((sum, question) => sum + (question.points || 0), 0)
 			}));
-
-			const allAttemptCount = await this.prisma.attempt.count({
-				where: { userId }
-			});
-
-			const recentAttempts = await this.prisma.attempt.findMany({
-				where: { userId, completed: true, isScored: true },
-				orderBy: {
-					createdAt: 'desc'
-				},
-				take: 2
-			});
-
-			const recentAttemptsWithQuiz = await Promise.all(recentAttempts.map(async (attempt) => {
-				const quiz = await this.prisma.quiz.findUnique({
-					where: { id: attempt.quizId }
-				});
-
-				const quizQuestions = await this.prisma.question.findMany({
-					where: { quizId: quiz.id }
-				});
-				const quizTotalScore = quizQuestions.reduce((sum, question) => sum + question.points, 0);
-				return {
-					...attempt,
-					quiz,
-					totalScore: quizTotalScore
-				};
-			}));
-
+		
 			return {
-				createdQuizesCount,
-				recentQuizzes: recentCreatedQuizzesWithQuestionCount,
+				createdQuizzesCount,
+				recentQuizzes: recentCreatedQuizzes.map(quiz => ({
+					...quiz,
+					questionCount: quiz._count.Question
+				})),
 				allAttemptCount,
 				recentAttempts: recentAttemptsWithQuiz
 			};
 		} catch (error) {
-			Logger.log(error, 'QuizService');
+			Logger.error('Error fetching dashboard', error, 'QuizService');
+			throw new Error('Failed to fetch dashboard data');
 		}
 	}
-
+	  
 	async createQuiz (data:{data: CreateQuizDTO, authorId: string}) {
 		Logger.log('Creating quiz...', 'QuizService');
 		try {
@@ -168,8 +166,11 @@ export class QuizService {
 			return {
 				error: 'Failed to fetch quizzes'
 			}
-		}
+		
+		}	
 	}
+
+	
 
 	async fetchUserQuizzes(userId: string) {
 		Logger.log('Fetching quizzes for user...', 'QuizService');
@@ -177,21 +178,18 @@ export class QuizService {
 			const quizzes = await this.prisma.quiz.findMany({
 				where: {
 					authorId: userId
+				},
+				include: {
+					_count: {
+						select: { Question: true }
+					}
 				}
 			});
 
-			const quizzesWithQuestionCount = await Promise.all(quizzes.map(async (quiz) => {
-				const questionCount = await this.prisma.question.count({
-					where: { quizId: quiz.id }
-				});
-				return {
-					...quiz,
-					questionCount
-				};
-			})
-			);
-
-			return quizzesWithQuestionCount;
+			return quizzes.map(quiz => ({
+				...quiz,
+				questionCount: quiz._count.Question
+			}));
 		} catch (error) {
 			Logger.error(error, 'QuizService');
 			return {
@@ -204,33 +202,31 @@ export class QuizService {
 		Logger.log('Fetching quiz by id...', 'QuizService');
 		try {
 			const quiz = await this.prisma.quiz.findUnique({
-				where: { id }
-			})
+				where: { id },
+				include: {
+					Question: {
+						include: {
+							Option: true
+						}
+					}
+				}
+			});
 
 			if (!quiz) {
 				return {
 					error: 'not-found'
-				}
+				};
 			}
 
 			if (quiz.authorId !== userId) {
 				return {
 					error: 'unauthorized'
-				}
+				};
 			}
 
-			const questions = await this.prisma.question.findMany({
-				where: { quizId: id }
-			});
-
-			const questionsWithOptions = await Promise.all(questions.map(async (question) => {
-				const options = await this.prisma.option.findMany({
-					where: { questionId: question.id }
-				});
-				return {
-					...question,
-					options
-				};
+			const questionsWithOptions = quiz.Question.map(question => ({
+				...question,
+				options: question.Option
 			}));
 
 			return {
@@ -248,7 +244,12 @@ export class QuizService {
 	async viewQuiz (id: string) {
 		try {
 			const quiz = await this.prisma.quiz.findUnique({
-				where: { id }
+				where: { id },
+				include: {
+					_count: {
+						select: { Question: true }
+					}
+				}
 			});
 
 			if (!quiz) {
@@ -263,13 +264,9 @@ export class QuizService {
 				};
 			}
 
-			const questions = await this.prisma.question.findMany({
-				where: { quizId: id }
-			});
-
 			return {
 				...quiz,
-				totalQuestions: questions.length
+				totalQuestions: quiz._count.Question
 			}
 		} catch (error) {
 			Logger.error(error, 'QuizService');
@@ -278,6 +275,8 @@ export class QuizService {
 			};
 		}
 	}
+
+	// refining
 
 	async deleteQuiz (id: string, authorId: string) {
 		Logger.log('Deleting quiz...', 'QuizService');
@@ -834,7 +833,22 @@ export class QuizService {
 		Logger.log('Viewing attempt...', 'QuizService');
 		try {
 			const attempt = await this.prisma.attempt.findUnique({
-				where: { id: attemptId }
+				where: {
+					id: attemptId
+				},
+				include: {
+					quiz: true,
+					Answer: {
+						include: {
+							question: {
+								include: {
+									Option: true
+								}
+							},
+							option: true
+						}
+					}
+				}
 			});
 
 			if (!attempt) {
@@ -849,57 +863,8 @@ export class QuizService {
 				};
 			}
 
-			const quiz = await this.prisma.quiz.findUnique({
-				where: { id: attempt.quizId }
-			});
-
-			if (!quiz) {
-				return {
-					error: 'quiz-not-found'
-				};
-			}
-
-			const questions = await this.prisma.question.findMany({
-				where: { quizId: quiz.id },
-				select: {
-					id: true,
-					text: true,
-					type: true,
-					points: true,
-				}
-			});
-
-			const questionsWithOptions = await Promise.all(questions.map(async (question) => {
-				const options = await this.prisma.option.findMany({
-					where: { questionId: question.id },
-					select: {
-						id: true,
-						text: true,
-					}
-				});
-				const answer = await this.prisma.answer.findFirst({
-					where: {
-						userId,
-						attemptId,
-						questionId: question.id
-					},
-					select: {
-						optionId: true,
-						optionIds: true,
-						booleanAnswer: true,
-						textAnswer: true,
-						score: true
-					}
-				});
-				return {
-					...question,
-					options,
-					answer
-				};
-			}));
-
 			const manualScoringNeeded = await this.checkIfManualScoringNeeded(attemptId);
-			const end = new Date(attempt.startTime.getTime() + quiz.timeLimit * 1000);
+			const end = new Date(attempt.startTime.getTime() + attempt.quiz.timeLimit * 1000);
 			const now = new Date();
 
 			if (!manualScoringNeeded && now > end && !attempt.completed) {
@@ -913,9 +878,42 @@ export class QuizService {
 			}
 
 			return {
-				attempt,
-				quiz,
-				questions: questionsWithOptions,
+				attempt: {
+					id: attempt.id,
+					startTime: attempt.startTime,
+					endTime: attempt.endTime,
+					completed: attempt.completed,
+					score: attempt.score,
+					isScored: attempt.isScored
+				},
+				quiz: {
+					id: attempt.quiz.id,
+					title: attempt.quiz.title,
+					description: attempt.quiz.description,
+					timeLimit: attempt.quiz.timeLimit
+				},
+				questions: attempt.Answer.map(answer => ({
+					id: answer.question.id,
+					text: answer.question.text,
+					type: answer.question.type,
+					points: answer.question.points,
+					options: answer.question.Option.map(option => ({
+						id: option.id,
+						text: option.text,
+						isCorrect: option.isCorrect
+					})),
+					answer: {
+						optionId: answer.optionId,
+						optionIds: answer.optionIds,
+						booleanAnswer: answer.booleanAnswer,
+						textAnswer: answer.textAnswer,
+						score: answer.score,
+						selectedOption: answer.option ? {
+							id: answer.option.id,
+							text: answer.option.text
+						} : null
+					}
+				})),
 				manualScoringNeeded
 			};
 
@@ -1139,25 +1137,24 @@ export class QuizService {
 	async getAllUserAttempts(userId: string) {
 		try {
 			const attempts = await this.prisma.attempt.findMany({
-				where: { userId }
+				where: { userId },
+				include: {
+					quiz: true,
+					Answer: {
+						include: {
+							question: true
+						}
+					}
+				}
 			});
 	
-			const attemptsWithQuiz = await Promise.all(attempts.map(async (attempt) => {
-				const quiz = await this.prisma.quiz.findUnique({
-					where: { id: attempt.quizId }
-				});
-
-				const questions = await this.prisma.question.findMany({
-					where: { quizId: quiz.id }
-				});
-				const totalScore = questions.reduce((sum, question) => sum + question.points, 0);
-
+			const attemptsWithQuiz = attempts.map(attempt => {
+				const totalScore = attempt.Answer.reduce((sum, answer) => sum + (answer.question.points || 0), 0);
 				return {
 					...attempt,
-					quiz,
 					totalScore
 				};
-			}));
+			});
 	
 			return attemptsWithQuiz;
 		} catch (error) {
@@ -1357,9 +1354,7 @@ export class QuizService {
 						});
 
 						if (answer.optionId) {
-							console.log(answer, answer.optionId)
 							const isCorrect = correctOptions.some(option => option.id === answer.optionId);
-							console.log(isCorrect)
 							answerScore = isCorrect ? question.points : 0;
 						} else if (answer.optionIds) {
 							const correctOptionIds = correctOptions.map(option => option.id);
@@ -1381,13 +1376,28 @@ export class QuizService {
 				}
 			}
 
-			await this.prisma.attempt.update({
-				where: { id: attemptId },
-				data: {
-					score: totalScore,
-					isScored: allScored
-				}
-			});
+			if (!attempt.endTime) {
+				await this.prisma.attempt.update({
+					where: { id: attemptId },
+					data: {
+						completed: true,
+						endTime: new Date(),
+						score: totalScore,
+						isScored: allScored
+					}
+				});
+			} else {
+
+				await this.prisma.attempt.update({
+					where: { id: attemptId },
+					data: {
+						score: totalScore,
+						isScored: allScored
+					}
+				});
+			}
+
+
 
 			return {
 				scored: true
