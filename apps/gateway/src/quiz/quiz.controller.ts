@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { QuizService } from './quiz.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { addOptionDTO, addQuestionDTO, CreateQuizDTO, submitAnswerDTO } from '@app/common';
@@ -11,9 +11,9 @@ export class QuizController {
 	constructor(private readonly quizService: QuizService) {}
 
 	@Get()
-	@ApiOperation({ summary: 'Fetch all quizzes' })
-	fetchQuizzes() {
-		return this.quizService.fetchQuizzes();
+	@ApiOperation({ summary: 'Fetch all quizzes with pagination and category filter' })
+	fetchQuizzes(@Query('page') page: number = 1, @Query('limit') limit: number = 10, @Query('category') category: string = "") {
+		return this.quizService.fetchQuizzes({ page, limit, category });
 	}
 
 	@Get('user')

@@ -93,7 +93,8 @@ export class QuizService {
 					published: false,
 					randomize: data.data.randomize,
 					showResultsImmediately: data.data.showResultsImmediately,
-					multipleAttempts: data.data.multipleAttempts
+					multipleAttempts: data.data.multipleAttempts,
+					category: data.data.category
 				}
 			});
 		} catch (error) {
@@ -143,14 +144,24 @@ export class QuizService {
 		}
 	}
 
-	async fetchQuizzes () {
+	async fetchQuizzes ( page: number, limit: number, category: string ) {
 		Logger.log('Fetching quizzes...', 'QuizService');
 		try {
+			// const { page, limit, category } = data;
+			const offset = (page - 1) * limit;
+
 			const quizes = await this.prisma.quiz.findMany({
 				where: {
-					published: true
-				}
+					published: true,
+					category: {
+						contains: category || '',
+						mode: 'insensitive'
+					}
+				},
+				skip: parseInt(`${offset}`),
+				take: parseInt(`${limit}`)
 			});
+
 			const quizzesWithQuestionCount = await Promise.all(quizes.map(async (quiz) => {
 				const questionCount = await this.prisma.question.count({
 					where: { quizId: quiz.id }
@@ -160,14 +171,26 @@ export class QuizService {
 					questionCount
 				};
 			}));
-			return quizzesWithQuestionCount;
+
+			const totalQuizzes = await this.prisma.quiz.count({
+				where: {
+					published: true,
+					category: category || undefined
+				}
+			});
+
+			return {
+				total: totalQuizzes,
+				page,
+				limit,
+				quizzes: quizzesWithQuestionCount
+			};
 		} catch (error) {
 			Logger.error(error, 'QuizService');
 			return {
 				error: 'Failed to fetch quizzes'
-			}
-		
-		}	
+			};
+		}
 	}
 
 	
@@ -316,23 +339,9 @@ export class QuizService {
 				where: { id: quizId }
 			});
 
-			if (!quiz) {
-				return {
-					error: 'not-found'
-				};
-			}
-
-			if (quiz.authorId !== authorId) {
-				return {
-					error: 'unauthorized'
-				}
-			}
-
-			if (quiz.published) {
-				return {
-					error: 'quiz-published'
-				};
-			}
+			if (!quiz) return { error: 'not-found' };
+			if (quiz.authorId !== authorId) return { error: 'unauthorized' }
+			if (quiz.published) return { error: 'quiz-published' };
 
 			if (data.type === 'Boolean' && (typeof data.booleanAnswer !== 'boolean')) {
 				return {

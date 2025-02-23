@@ -32,8 +32,8 @@ export class QuizController {
 	}
 
 	@MessagePattern({ cmd: 'fetch-quizzes' })
-	fetchQuizzes() {
-		return this.quizService.fetchQuizzes();
+	fetchQuizzes(data: { page: number, limit: number, category: string }) {
+		return this.quizService.fetchQuizzes(data.page, data.limit, data.category);
 	}
 
 	@MessagePattern({ cmd: 'fetch-user-quizzes' })
