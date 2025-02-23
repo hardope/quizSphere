@@ -61,9 +61,9 @@ export class QuizService {
         }
     }
 
-    async fetchQuizzes () {
+    async fetchQuizzes (data: { page: number, limit: number, category?: string }) {
         try {
-            const res = await this.quizMicroService.send({ cmd: 'fetch-quizzes' }, {}).toPromise();
+            const res = await this.quizMicroService.send({ cmd: 'fetch-quizzes' }, { page:data.page, limit:data.limit, category:data.category }).toPromise();
             if (res.error) {
                 throw new BadRequestException(res.error);
             }

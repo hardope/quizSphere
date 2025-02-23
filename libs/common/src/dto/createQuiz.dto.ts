@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger"
-import { IsBoolean, IsDateString, IsEmail, IsNumber, IsOptional, IsString } from "class-validator"
+import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class CreateQuizDTO {
     
@@ -50,5 +50,10 @@ export class CreateQuizDTO {
     @ApiProperty({ example: "2021-09-09T00:00:00.000Z" })
     @IsOptional()
     expiresAt?: Date
+
+    @IsString()
+    @ApiProperty({ example: "science", required:false })
+    @IsOptional()
+    category?: string
 
 }

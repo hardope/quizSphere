@@ -52,4 +52,9 @@ export class UpdateQuizDTO {
     @IsOptional()
     @ApiProperty({ example: "2021-09-09T00:00:00.000Z", required: false })
     expiresAt?: Date;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ example: "science", required: false })
+    category?: string;
 }
