@@ -3,6 +3,6 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class GatewayService {
   getHello(): string {
-    return '<h1>Sphere API Gateway</h1>';
+    return '<h1><b>Sphere API Gateway</b></h1>';
   }
 }
