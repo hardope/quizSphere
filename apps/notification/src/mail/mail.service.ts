@@ -64,7 +64,7 @@ export class MailService {
             },
         });
 
-        const verificationLink = `http://localhost/reset-password/${verification.token}`;
+        const verificationLink = `${process.env.FRONTEND_HOST}/reset-password/${verification.token}`;
 
         const subject = 'Password Reset Request';
         const text = `Hello ${user.firstName},\n\nYou have requested a password reset. Please click on the link below to reset your password:\n\n${verificationLink}\n\nIf you did not request a password reset, no further action is required.\nThis Link will expire in 5 minutes\n\nBest regards,\nThe Sphere Team`;
