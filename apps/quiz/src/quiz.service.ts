@@ -274,7 +274,8 @@ export class QuizService {
 				include: {
 					_count: {
 						select: { Question: true }
-					}
+					},
+					author: true
 				}
 			});
 
@@ -292,6 +293,11 @@ export class QuizService {
 
 			return {
 				...quiz,
+				author: {
+					id: quiz.author.id,
+					firstName: quiz.author.firstName,
+					lastName: quiz.author.lastName
+				},
 				totalQuestions: quiz._count.Question
 			}
 		} catch (error) {
