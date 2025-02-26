@@ -2,12 +2,15 @@ import { addOptionDTO, addQuestionDTO, PrismaService, submitAnswerDTO } from '@a
 import { CreateQuizDTO } from '@app/common/dto/createQuiz.dto';
 import { UpdateQuizDTO } from '@app/common/dto/updateQuiz.dto';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { SchedulerRegistry, Timeout } from '@nestjs/schedule';
+import { CronJob } from 'cron';
 
 @Injectable()
 export class QuizService {
 
 	constructor (
-		private readonly prisma: PrismaService
+		private readonly prisma: PrismaService,
+		private readonly schedulerRegistry: SchedulerRegistry
 	) {}
 
 	echo () {
@@ -823,6 +826,11 @@ export class QuizService {
 				};
 			}));
 
+			this.scheduleScoring(
+				new Date(newQuizAttempt.startTime.getTime() + quizData.timeLimit * 1000),
+				newQuizAttempt.id
+			)
+
 			return {
 				"message": "attempt-created",
 				attempt: {
@@ -886,6 +894,11 @@ export class QuizService {
 				await this.scoreQuiz(attemptId);
 			}
 
+			const allQuestions = await this.prisma.question.findMany({
+				where: { quizId: attempt.quiz.id },
+				include: { Option: true }
+			});
+
 			return {
 				attempt: {
 					id: attempt.id,
@@ -901,28 +914,31 @@ export class QuizService {
 					description: attempt.quiz.description,
 					timeLimit: attempt.quiz.timeLimit
 				},
-				questions: attempt.Answer.map(answer => ({
-					id: answer.question.id,
-					text: answer.question.text,
-					type: answer.question.type,
-					points: answer.question.points,
-					options: answer.question.Option.map(option => ({
-						id: option.id,
-						text: option.text,
-						isCorrect: option.isCorrect
-					})),
-					answer: {
-						optionId: answer.optionId,
-						optionIds: answer.optionIds,
-						booleanAnswer: answer.booleanAnswer,
-						textAnswer: answer.textAnswer,
-						score: answer.score,
-						selectedOption: answer.option ? {
-							id: answer.option.id,
-							text: answer.option.text
+				questions: allQuestions.map(question => {
+					const answer = attempt.Answer.find(a => a.questionId === question.id);
+					return {
+						id: question.id,
+						text: question.text,
+						type: question.type,
+						points: question.points,
+						options: question.Option.map(option => ({
+							id: option.id,
+							text: option.text,
+							isCorrect: option.isCorrect
+						})),
+						answer: answer ? {
+							optionId: answer.optionId,
+							optionIds: answer.optionIds,
+							booleanAnswer: answer.booleanAnswer,
+							textAnswer: answer.textAnswer,
+							score: answer.score,
+							selectedOption: answer.option ? {
+								id: answer.option.id,
+								text: answer.option.text
+							} : null
 						} : null
-					}
-				})),
+					};
+				}),
 				manualScoringNeeded
 			};
 
@@ -1128,7 +1144,7 @@ export class QuizService {
 			const isManualScoreNeeded = await this.checkIfManualScoringNeeded(attemptId);
 
 			if (!isManualScoreNeeded) {
-				this.scoreQuiz(attemptId)
+				this.scheduleScoringImmediately(attemptId);
 			}
 
 			return {
@@ -1442,6 +1458,32 @@ export class QuizService {
 			Logger.error(error, 'QuizService');
 			return false;
 		}
+	}
+
+	
+	scheduleScoring(date: Date, taskName: string) {
+		const job = new CronJob(date, async () => {
+			await this.scoreQuiz(taskName);
+		});
+		this.schedulerRegistry.addCronJob(taskName, job);
+		job.start();
+		Logger.log(`Task ${taskName} scheduled to run at ${date}`, 'QuizService');
+	}
+
+	scheduleScoringImmediately(taskName: string) {
+		const existingJob = this.schedulerRegistry.getCronJob(taskName);
+		if (existingJob) {
+			existingJob.stop();
+			this.schedulerRegistry.deleteCronJob(taskName);
+			Logger.log(`Existing task ${taskName} stopped and deleted`, 'QuizService');
+		}
+
+		const job = new CronJob(new Date(), async () => {
+			await this.scoreQuiz(taskName);
+		});
+		this.schedulerRegistry.addCronJob(taskName, job);
+		job.start();
+		Logger.log(`Task ${taskName} scheduled to run immediately`, 'QuizService');
 	}
 
 }
