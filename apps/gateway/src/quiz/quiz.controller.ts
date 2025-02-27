@@ -110,7 +110,7 @@ export class QuizController {
 		return this.quizService.addOption(questionId, data, req.user.id);
 	}
 
-	@Patch('question/:questionId/option/:optionId')
+	@Patch('question/option/:optionId')
 	@ApiOperation({ summary: 'Edit option in question' })
 	@UseGuards(JwtGuard)
 	@ApiBearerAuth()
@@ -118,7 +118,7 @@ export class QuizController {
 		return this.quizService.editOption(optionId, data, req.user.id);
 	}
 
-	@Delete('question/:questionId/option/:optionId')
+	@Delete('question/option/:optionId')
 	@ApiOperation({ summary: 'Remove option from question' })
 	@UseGuards(JwtGuard)
 	@ApiBearerAuth()
