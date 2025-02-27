@@ -1176,7 +1176,8 @@ export class QuizService {
 							question: true
 						}
 					}
-				}
+				},
+				orderBy: { createdAt: 'desc' }
 			});
 	
 			const attemptsWithQuiz = attempts.map(attempt => {
